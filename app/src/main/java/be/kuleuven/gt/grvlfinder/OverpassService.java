@@ -35,7 +35,8 @@ public class OverpassService {
         void onError(String error);
     }
 
-    public static void fetchData(BoundingBox bbox, ScoreCalculator scoreCalculator, OverpassCallback callback) {
+    public static void fetchData(BoundingBox bbox, ScoreCalculator scoreCalculator,
+                                 BikeTypeManager bikeTypeManager, OverpassCallback callback) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
         if (callback != null) {
@@ -55,65 +56,86 @@ public class OverpassService {
                     return;
                 }
 
-                Log.d(TAG, "Found " + results.size() + " roads, adding accurate elevation data...");
+                Log.d(TAG, "Found " + results.size() + " roads");
 
-                // Step 2: Add slope data using strategic elevation sampling
-                ElevationService.addSlopeDataToRoads(results, new ElevationService.RoadElevationCallback() {
-                    @Override
-                    public void onSuccess(List<PolylineResult> updatedResults) {
-                        Log.d(TAG, "Recalculating scores with accurate slope data...");
+                // Step 2: Decide whether to fetch elevation data based on bike type
+                boolean shouldFetchElevation = bikeTypeManager != null &&
+                        bikeTypeManager.shouldFetchElevationData();
 
-                        // CRITICAL: Recalculate scores using the new slope data
-                        for (PolylineResult road : updatedResults) {
-                            double maxSlope = road.getMaxSlopePercent();
+                if (shouldFetchElevation) {
+                    Log.d(TAG, "Fetching elevation data for current bike mode...");
 
-                            if (maxSlope >= 0) { // Valid slope data
-                                int oldScore = road.getScore();
-                                int newScore = scoreCalculator.calculateScoreWithSlope(
-                                        road.getTags(),
-                                        road.getPoints(),
-                                        maxSlope
-                                );
-                                road.setScore(newScore);
+                    // Add slope data using strategic elevation sampling
+                    ElevationService.addSlopeDataToRoads(results, new ElevationService.RoadElevationCallback() {
+                        @Override
+                        public void onSuccess(List<PolylineResult> updatedResults) {
+                            Log.d(TAG, "Recalculating scores with accurate slope data...");
 
-                                Log.d(TAG, String.format("Road slope %.1f%% - Score: %d -> %d",
-                                        maxSlope, oldScore, newScore));
+                            // CRITICAL: Recalculate scores using the new slope data
+                            for (PolylineResult road : updatedResults) {
+                                double maxSlope = road.getMaxSlopePercent();
 
-                                // Extra debug for steep roads
-                                if (maxSlope > 12.0) {
-                                    Log.w(TAG, String.format("STEEP ROAD: %.1f%% slope, final score: %d",
-                                            maxSlope, newScore));
+                                if (maxSlope >= 0) { // Valid slope data
+                                    int oldScore = road.getScore();
+                                    int newScore = scoreCalculator.calculateScoreWithSlope(
+                                            road.getTags(),
+                                            road.getPoints(),
+                                            maxSlope
+                                    );
+                                    road.setScore(newScore);
+
+                                    Log.d(TAG, String.format("Road slope %.1f%% - Score: %d -> %d",
+                                            maxSlope, oldScore, newScore));
+
+                                    // Extra debug for steep roads
+                                    if (maxSlope > 12.0) {
+                                        Log.w(TAG, String.format("STEEP ROAD: %.1f%% slope, final score: %d",
+                                                maxSlope, newScore));
+                                    }
+                                } else {
+                                    Log.d(TAG, "Road has no slope data, keeping original score: " + road.getScore());
                                 }
-                            } else {
-                                Log.d(TAG, "Road has no slope data, keeping original score: " + road.getScore());
                             }
+
+                            // Final sort by score
+                            Collections.sort(updatedResults, (a, b) -> Integer.compare(b.getScore(), a.getScore()));
+
+                            mainHandler.post(() -> {
+                                if (callback != null) {
+                                    Log.d(TAG, "Completed processing " + updatedResults.size() + " roads with elevation data");
+                                    callback.onSuccess(updatedResults);
+                                }
+                            });
                         }
 
-                        // Final sort by score
-                        Collections.sort(updatedResults, (a, b) -> Integer.compare(b.getScore(), a.getScore()));
+                        @Override
+                        public void onError(String error) {
+                            Log.w(TAG, "Elevation processing failed: " + error + ". Continuing without elevation data.");
 
-                        mainHandler.post(() -> {
-                            if (callback != null) {
-                                Log.d(TAG, "Completed processing " + updatedResults.size() + " roads with recalculated scores");
-                                callback.onSuccess(updatedResults);
-                            }
-                        });
-                    }
+                            // Continue without elevation data - just sort by current scores
+                            Collections.sort(results, (a, b) -> Integer.compare(b.getScore(), a.getScore()));
 
-                    @Override
-                    public void onError(String error) {
-                        Log.w(TAG, "Elevation processing failed: " + error + ". Continuing without elevation data.");
+                            mainHandler.post(() -> {
+                                if (callback != null) {
+                                    callback.onSuccess(results);
+                                }
+                            });
+                        }
+                    });
 
-                        // Continue without elevation data - just sort by current scores
-                        Collections.sort(results, (a, b) -> Integer.compare(b.getScore(), a.getScore()));
+                } else {
+                    Log.d(TAG, "Skipping elevation data fetch for current bike mode");
 
-                        mainHandler.post(() -> {
-                            if (callback != null) {
-                                callback.onSuccess(results);
-                            }
-                        });
-                    }
-                });
+                    // Just sort by current scores without elevation processing
+                    Collections.sort(results, (a, b) -> Integer.compare(b.getScore(), a.getScore()));
+
+                    mainHandler.post(() -> {
+                        if (callback != null) {
+                            Log.d(TAG, "Completed processing " + results.size() + " roads without elevation data");
+                            callback.onSuccess(results);
+                        }
+                    });
+                }
 
             } catch (Exception e) {
                 Log.e(TAG, "Error processing roads", e);

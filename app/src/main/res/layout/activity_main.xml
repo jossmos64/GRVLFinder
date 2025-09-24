@@ -14,40 +14,64 @@
         android:id="@+id/topButtonContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_gravity="top|end"
         android:layout_marginTop="40dp"
         android:layout_marginEnd="20dp"
-        android:gravity="center_vertical"
-        android:spacing="8dp">
+        android:gravity="center">
 
-        <Button
-            android:id="@+id/criteriaButton"
-            android:layout_width="60dp"
+        <!-- Eerste rij: Bike & Criteria -->
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⚙️"
-            android:backgroundTint="#d0b58a"
-            android:textColor="@color/white"
-            android:layout_marginEnd="8dp"/>
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
 
-        <Button
-            android:id="@+id/drawExploreButton"
-            android:layout_width="60dp"
+            <Button
+                android:id="@+id/bikeTypeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🚵‍♂️"
+                android:textSize="10dp"
+                android:backgroundTint="#d0b58a"
+                android:textColor="@color/white"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/settingsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📖"
+                android:backgroundTint="#d0b58a"
+                android:textColor="@color/white"/>
+
+        </LinearLayout>
+
+        <!-- Tweede rij: Draw & Settings -->
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="✏️"
-            android:backgroundTint="#d0b58a"
-            android:textColor="@color/white"
-            android:layout_marginEnd="8dp"/>
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/settingsButton"
-            android:layout_width="60dp"
-            android:layout_height="wrap_content"
-            android:text="📖"
-            android:backgroundTint="#d0b58a"
-            android:textColor="@color/white"/>
+            <Button
+                android:id="@+id/drawExploreButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✏️"
+                android:backgroundTint="#d0b58a"
+                android:textColor="@color/white"
+                android:layout_marginEnd="8dp"/>
 
+            <Button
+                android:id="@+id/criteriaButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚙️"
+                android:backgroundTint="#d0b58a"
+                android:textColor="@color/white"/>
+        </LinearLayout>
     </LinearLayout>
+
 
     <!-- Bottom Buttons Container -->
     <LinearLayout

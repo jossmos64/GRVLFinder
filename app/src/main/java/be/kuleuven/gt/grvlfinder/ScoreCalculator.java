@@ -9,23 +9,43 @@ import java.util.Map;
 public class ScoreCalculator {
     private static final String TAG = "ScoreCalculator";
     private Map<String, Integer> weights;
+    private BikeTypeManager bikeTypeManager;
 
     public ScoreCalculator(Map<String, Integer> weights) {
         this.weights = weights;
     }
 
+    public void setBikeTypeManager(BikeTypeManager bikeTypeManager) {
+        this.bikeTypeManager = bikeTypeManager;
+    }
+
     public int calculateScore(Map<String, String> tags, List<GeoPoint> points) {
+        // Use bike type manager weights if available, otherwise fall back to instance weights
+        Map<String, Integer> currentWeights = (bikeTypeManager != null) ?
+                bikeTypeManager.getCurrentWeights() : weights;
+
+        return calculateScoreWithWeights(tags, points, currentWeights);
+    }
+
+    private int calculateScoreWithWeights(Map<String, String> tags, List<GeoPoint> points,
+                                          Map<String, Integer> currentWeights) {
         int score = 0;
 
-        int w_surface = weights.getOrDefault("surface", 3);
-        int w_smoothness = weights.getOrDefault("smoothness", 2);
-        int w_tracktype = weights.getOrDefault("tracktype", 2);
-        int w_bicycle = weights.getOrDefault("bicycle", 2);
-        int w_width = weights.getOrDefault("width", 1);
-        int w_length = weights.getOrDefault("length", 1);
-        int w_slope = weights.getOrDefault("slope", 5);
+        int w_surface = currentWeights.getOrDefault("surface", 3);
+        int w_smoothness = currentWeights.getOrDefault("smoothness", 2);
+        int w_tracktype = currentWeights.getOrDefault("tracktype", 2);
+        int w_bicycle = currentWeights.getOrDefault("bicycle", 2);
+        int w_width = currentWeights.getOrDefault("width", 1);
+        int w_length = currentWeights.getOrDefault("length", 1);
+        int w_slope = currentWeights.getOrDefault("slope", 5);
 
-        score += calculateSurfaceScore(tags.get("surface"), w_surface);
+        // Apply bike-type specific scoring
+        if (bikeTypeManager != null && bikeTypeManager.prefersPavedRoads()) {
+            score += calculateRoadSurfaceScore(tags.get("surface"), w_surface);
+        } else {
+            score += calculateSurfaceScore(tags.get("surface"), w_surface);
+        }
+
         score += calculateSmoothnessScore(tags.get("smoothness"), w_smoothness);
         score += calculateTracktypeScore(tags.get("tracktype"), w_tracktype);
         score += calculateBicycleScore(tags.get("bicycle"), w_bicycle);
@@ -41,16 +61,41 @@ public class ScoreCalculator {
      * This is the new method that should be used when slope data is available
      */
     public int calculateScoreWithSlope(Map<String, String> tags, List<GeoPoint> points, double maxSlopePercent) {
-        int baseScore = calculateScore(tags, points);
+        // Use bike type manager weights if available
+        Map<String, Integer> currentWeights = (bikeTypeManager != null) ?
+                bikeTypeManager.getCurrentWeights() : weights;
+
+        int baseScore = calculateScoreWithWeights(tags, points, currentWeights);
 
         // Remove the slope score from tags (which might be inaccurate)
-        int w_slope = weights.getOrDefault("slope", 5);
+        int w_slope = currentWeights.getOrDefault("slope", 5);
         baseScore -= calculateSlopeScore(tags, w_slope);
 
-        // Add the accurate slope score
-        baseScore += calculateAccurateSlopeScore(maxSlopePercent, w_slope);
+        // Add the accurate slope score only if bike type uses slope penalties
+        if (bikeTypeManager == null || bikeTypeManager.shouldPenalizeSlopes()) {
+            baseScore += calculateAccurateSlopeScore(maxSlopePercent, w_slope);
+        }
 
         return Math.max(0, baseScore);
+    }
+
+    /**
+     * Road-focused surface scoring (for race bikes on roads)
+     */
+    private int calculateRoadSurfaceScore(String surface, int weight) {
+        if (surface == null) return 0;
+        switch (surface.toLowerCase()) {
+            case "asphalt": case "paved": case "concrete": case "concrete:plates":
+                return 3 * weight; // High score for paved surfaces
+            case "compacted": case "fine_gravel":
+                return 1 * weight; // Acceptable for road bikes
+            case "gravel": case "pebblestone":
+                return -1 * weight; // Slight penalty for gravel
+            case "ground": case "earth": case "dirt": case "unpaved":
+                return -3 * weight; // Strong penalty for unpaved
+            default:
+                return 0;
+        }
     }
 
     private int calculateSurfaceScore(String surface, int weight) {
@@ -193,5 +238,13 @@ public class ScoreCalculator {
     public void updateWeights(Map<String, Integer> newWeights) {
         this.weights.clear();
         this.weights.putAll(newWeights);
+
+        // If we have a bike type manager, update its custom weights if in custom mode
+        if (bikeTypeManager != null && bikeTypeManager.getCurrentBikeType() == BikeType.CUSTOM) {
+            for (Map.Entry<String, Integer> entry : newWeights.entrySet()) {
+                bikeTypeManager.updateCustomWeight(entry.getKey(), entry.getValue());
+            }
+            bikeTypeManager.saveCustomWeights();
+        }
     }
 }

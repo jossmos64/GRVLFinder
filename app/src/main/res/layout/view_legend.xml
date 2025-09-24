@@ -41,6 +41,7 @@
                 android:checked="true" />
 
             <TextView
+                android:id="@+id/greenLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="  Good Gravel"
@@ -67,6 +68,7 @@
                 android:checked="true" />
 
             <TextView
+                android:id="@+id/yellowLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="  OK"
@@ -93,6 +95,7 @@
                 android:checked="true" />
 
             <TextView
+                android:id="@+id/redLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="  No Go Zone"

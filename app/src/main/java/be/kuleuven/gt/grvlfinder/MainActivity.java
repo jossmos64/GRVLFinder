@@ -43,6 +43,9 @@ public class MainActivity extends BaseMapActivity {
     private long lastQueryTimeMs = 0;
 
     private boolean isDrawingRoute = false; // nieuwe state
+    private Button bikeTypeButton;
+    private BikeTypeManager bikeTypeManager;
+    private View legendView; // Store reference to legend view
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,9 +59,12 @@ public class MainActivity extends BaseMapActivity {
         scoreCalculator = new ScoreCalculator(weights);
         filterManager = new FilterManager();
         routeManager = new RouteManager(map);
+        bikeTypeManager = new BikeTypeManager(prefs);
+        scoreCalculator.setBikeTypeManager(bikeTypeManager);
 
         bindUI();
         setupEventHandlers();
+        updateUIForBikeType();
 
         Button settingsButton = findViewById(R.id.settingsButton);
         settingsButton.setOnClickListener(v -> {
@@ -74,10 +80,20 @@ public class MainActivity extends BaseMapActivity {
         criteriaButton = findViewById(R.id.criteriaButton);
         drawExploreButton = findViewById(R.id.drawExploreButton);
         progressBar = findViewById(R.id.progressBar);
+        bikeTypeButton = findViewById(R.id.bikeTypeButton);
 
         LinearLayout legendContainer = findViewById(R.id.legendContainer);
         if (legendContainer != null) {
-            legendContainer.addView(LegendView.create(this));
+            legendView = LegendView.create(this);
+            legendContainer.addView(legendView);
+            // Update legend for current bike type
+            LegendView.updateForBikeType(legendView, bikeTypeManager.getCurrentBikeType());
+        }
+
+        View topButtons = findViewById(R.id.topButtonContainer);
+        if (topButtons != null) {
+            topButtons.bringToFront();    // Z-orde verhogen
+            topButtons.invalidate();      // geforceerd hertekenen
         }
 
         ToggleButton btnGreen = findViewById(R.id.btnGreen);
@@ -92,6 +108,7 @@ public class MainActivity extends BaseMapActivity {
         findButton.setOnClickListener(v -> handleFindGravel());
         exportButton.setOnClickListener(v -> handleExportGpx());
         undoButton.setOnClickListener(v -> routeManager.undoLastSegment());
+        bikeTypeButton.setOnClickListener(v -> showBikeTypeDialog());
 
         if (criteriaButton != null) {
             criteriaButton.setOnClickListener(v ->
@@ -122,13 +139,13 @@ public class MainActivity extends BaseMapActivity {
         if (!isDrawingRoute) {
             // Activeren van tekenmodus
             isDrawingRoute = true;
-            drawExploreButton.setText("\uD83D\uDD0D");
+            drawExploreButton.setText("🔍");
             bottomContainer.setVisibility(View.VISIBLE);
             Toast.makeText(this, "Route tekenen geactiveerd", Toast.LENGTH_SHORT).show();
         } else {
             // Wisselen naar Explore modus
             isDrawingRoute = false;
-            drawExploreButton.setText("✏\uFE0F");
+            drawExploreButton.setText("✏️");
             bottomContainer.setVisibility(View.GONE);
             routeManager.clearRoute();
             Toast.makeText(this, "Explore modus geactiveerd", Toast.LENGTH_SHORT).show();
@@ -152,12 +169,14 @@ public class MainActivity extends BaseMapActivity {
             return;
         }
 
-        OverpassService.fetchData(bbox, scoreCalculator, new OverpassService.OverpassCallback() {
+        OverpassService.fetchData(bbox, scoreCalculator, bikeTypeManager, new OverpassService.OverpassCallback() {
             @Override
             public void onPreExecute() {
                 findButton.setEnabled(false);
                 progressBar.setVisibility(View.VISIBLE);
-                Toast.makeText(MainActivity.this, "Zoeken naar gravelwegen...", Toast.LENGTH_SHORT).show();
+
+                String loadingMessage = getLoadingMessage();
+                Toast.makeText(MainActivity.this, loadingMessage, Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -169,7 +188,9 @@ public class MainActivity extends BaseMapActivity {
                 lastQueryTimeMs = System.currentTimeMillis();
                 routeManager.setLastResults(results);
                 updateMapFilter();
-                Toast.makeText(MainActivity.this, "Gevonden: " + results.size() + " wegen", Toast.LENGTH_SHORT).show();
+
+                String resultMessage = getResultMessage(results.size());
+                Toast.makeText(MainActivity.this, resultMessage, Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -179,6 +200,45 @@ public class MainActivity extends BaseMapActivity {
                 Toast.makeText(MainActivity.this, "Fout: " + error, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private String getLoadingMessage() {
+        BikeType currentType = bikeTypeManager.getCurrentBikeType();
+        switch (currentType) {
+            case RACE_ROAD:
+                return bikeTypeManager.shouldFetchElevationData() ?
+                        "Zoeken naar wegen met hoogte-analyse..." : "Zoeken naar wegen...";
+            case GRAVEL_BIKE:
+                return bikeTypeManager.shouldFetchElevationData() ?
+                        "Zoeken naar gravelwegen met hoogte-analyse..." : "Zoeken naar gravelwegen...";
+            case RACE_BIKEPACKING:
+                return "Zoeken naar touring routes met hoogte-analyse...";
+            case GRAVEL_BIKEPACKING:
+                return "Zoeken naar adventure routes met hoogte-analyse...";
+            case CUSTOM:
+                return bikeTypeManager.shouldFetchElevationData() ?
+                        "Zoeken met custom criteria en hoogte-analyse..." : "Zoeken met custom criteria...";
+            default:
+                return "Zoeken...";
+        }
+    }
+
+    private String getResultMessage(int resultCount) {
+        BikeType currentType = bikeTypeManager.getCurrentBikeType();
+        switch (currentType) {
+            case RACE_ROAD:
+                return "Gevonden: " + resultCount + " wegen";
+            case GRAVEL_BIKE:
+                return "Gevonden: " + resultCount + " gravelwegen";
+            case RACE_BIKEPACKING:
+                return "Gevonden: " + resultCount + " touring routes";
+            case GRAVEL_BIKEPACKING:
+                return "Gevonden: " + resultCount + " adventure routes";
+            case CUSTOM:
+                return "Gevonden: " + resultCount + " routes (custom)";
+            default:
+                return "Gevonden: " + resultCount + " wegen";
+        }
     }
 
     private void handleExportGpx() {
@@ -226,9 +286,6 @@ public class MainActivity extends BaseMapActivity {
         dialog.show();
     }
 
-
-
-
     private void updateMapFilter() {
         if (lastResultsCache == null) return;
         List<PolylineResult> filtered = filterManager.applyFilter(lastResultsCache);
@@ -250,7 +307,7 @@ public class MainActivity extends BaseMapActivity {
             else if (score >= 10) pl.setColor(0xDDFFA500); // oranje
             else pl.setColor(0xCCDC143C); // rood
 
-            pl.setWidth(6.0f);
+            pl.setWidth(12.0f);
 
             pl.setOnClickListener((polyline, mapView, eventPos) -> {
                 PolylineDetailsDialog.show(MainActivity.this, pr);
@@ -295,17 +352,6 @@ public class MainActivity extends BaseMapActivity {
 
     private static final int REQ_PERM_LOCATION = 1234;
 
-    private void checkAndRequestLocationPermission() {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            androidx.core.app.ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQ_PERM_LOCATION);
-        } else {
-            // enabled location features if any
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -314,25 +360,95 @@ public class MainActivity extends BaseMapActivity {
         }
     }
 
-    private void checkRoutingProviderWarning() {
-        android.content.SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        String base = prefs.getString("routing_base_url", OSRMRoutingService.DEFAULT_OSRM_URL);
-        boolean ignore = prefs.getBoolean("ignore_osrm_demo_warning", false);
-        if (base.contains("router.project-osrm.org") && !ignore) {
-            new android.app.AlertDialog.Builder(this)
-                    .setTitle("Routing provider waarschuwing")
-                    .setMessage("Je gebruikt de publieke OSRM-demo server (router.project-osrm.org). Deze server is **niet** bedoeld voor productie/distributie — hij kan worden beperkt of uitgeschakeld. Voor publicatie: host je eigen OSRM of gebruik een commerciële routing API en zet hier die base URL. Wil je doorgaan?")
-                    .setPositiveButton("Doorgaan", (d, w) -> d.dismiss())
-                    .setNeutralButton("Niet meer tonen", (d, w) -> {
-                        prefs.edit().putBoolean("ignore_osrm_demo_warning", true).apply();
-                        d.dismiss();
-                    })
-                    .setNegativeButton("Instellingen", (d, w) -> {
-                        startActivity(new android.content.Intent(this, SettingsActivity.class));
-                        d.dismiss();
-                    })
-                    .show();
+    private void showBikeTypeDialog() {
+        BikeTypeSelectionDialog.show(this, bikeTypeManager.getCurrentBikeType(),
+                bikeTypeManager.isElevationDataEnabled(),
+                new BikeTypeSelectionDialog.BikeTypeSelectionCallback() {
+                    @Override
+                    public void onBikeTypeSelected(BikeType bikeType) {
+                        bikeTypeManager.setBikeType(bikeType);
+                        updateUIForBikeType();
+                        Toast.makeText(MainActivity.this,
+                                "Selected: " + bikeType.getDisplayName(), Toast.LENGTH_SHORT).show();
+                        invalidateCache();
+                    }
+
+                    @Override
+                    public void onCustomCriteriaRequested() {
+                        showCustomCriteriaDialog();
+                    }
+
+                    @Override
+                    public void onElevationSettingChanged(boolean enabled) {
+                        bikeTypeManager.setElevationDataEnabled(enabled);
+                        invalidateCache();
+
+                        String message = enabled ?
+                                "Hoogte-analyse ingeschakeld" : "Hoogte-analyse uitgeschakeld";
+                        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void showCustomCriteriaDialog() {
+        CustomCriteriaDialog.show(this, bikeTypeManager.getCustomWeights(),
+                new CustomCriteriaDialog.CustomCriteriaCallback() {
+                    @Override
+                    public void onCriteriaSaved(Map<String, Integer> weights) {
+                        for (Map.Entry<String, Integer> entry : weights.entrySet()) {
+                            bikeTypeManager.updateCustomWeight(entry.getKey(), entry.getValue());
+                        }
+                        bikeTypeManager.saveCustomWeights();
+
+                        Toast.makeText(MainActivity.this,
+                                "Custom criteria saved", Toast.LENGTH_SHORT).show();
+                        invalidateCache();
+                    }
+                });
+    }
+
+    private void updateUIForBikeType() {
+        BikeType currentType = bikeTypeManager.getCurrentBikeType();
+
+        // Update bike type button emoji
+        bikeTypeButton.setText(currentType.getEmoji());
+
+        // Update find button text based on bike type
+        switch (currentType) {
+            case RACE_ROAD:
+                findButton.setText("Find Roads");
+                break;
+            case GRAVEL_BIKE:
+                findButton.setText("Find Gravel");
+                break;
+            case RACE_BIKEPACKING:
+                findButton.setText("Find Routes");
+                break;
+            case GRAVEL_BIKEPACKING:
+                findButton.setText("Find Touring");
+                break;
+            case CUSTOM:
+                findButton.setText("Find Custom");
+                break;
         }
+
+        // Update criteria button behavior
+        if (currentType == BikeType.CUSTOM) {
+            criteriaButton.setText("🎛️"); // Different icon for custom mode
+        } else {
+            criteriaButton.setText("⚙️"); // Standard settings icon
+        }
+
+        // Update legend for current bike type
+        if (legendView != null) {
+            LegendView.updateForBikeType(legendView, currentType);
+        }
+    }
+
+    private void invalidateCache() {
+        lastBBoxQueried = null;
+        lastResultsCache = null;
+        lastQueryTimeMs = 0;
     }
 
 }
