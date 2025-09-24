@@ -1,0 +1,141 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- MapView -->
+    <org.osmdroid.views.MapView
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Top Buttons Container -->
+    <LinearLayout
+        android:id="@+id/topButtonContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="20dp"
+        android:gravity="center_vertical"
+        android:spacing="8dp">
+
+        <Button
+            android:id="@+id/criteriaButton"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:text="⚙️"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@color/white"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/drawExploreButton"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:text="✏️"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@color/white"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/settingsButton"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:text="📖"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@color/white"/>
+
+    </LinearLayout>
+
+    <!-- Bottom Buttons Container -->
+    <LinearLayout
+        android:id="@+id/bottomButtonContainer"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="40dp"
+        android:weightSum="2"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/exportButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Export GPX"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@color/white"
+            android:layout_marginEnd="4dp"
+            android:layout_marginStart="4dp"/>
+
+        <Button
+            android:id="@+id/undoButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Undo"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@color/white"
+            android:layout_marginEnd="4dp"
+            android:layout_marginStart="4dp"/>
+    </LinearLayout>
+
+    <!-- Find Gravel Button -->
+    <Button
+        android:id="@+id/findButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Find Gravel"
+        android:fontFamily="@font/baloo_bhaina"
+        android:textSize="18dp"
+        android:backgroundTint="#d0b58a"
+        android:textColor="@color/white"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="100dp"/>
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="150dp" />
+
+    <!-- Legend Container -->
+    <LinearLayout
+        android:id="@+id/legendContainer"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="20dp" />
+
+    <!-- Color Filter Container -->
+    <LinearLayout
+        android:id="@+id/colorFilterContainer"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginTop="290dp"
+        android:layout_marginStart="20dp" />
+
+    <!-- OSM Attribution -->
+    <TextView
+        android:id="@+id/osmAttribution"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="© OpenStreetMap contributors"
+        android:textSize="12sp"
+        android:padding="6dp"
+        android:layout_margin="8dp"
+        android:layout_gravity="bottom|start"
+        android:background="@drawable/bg_attribution"
+        android:textColor="#000000"/>
+</FrameLayout>

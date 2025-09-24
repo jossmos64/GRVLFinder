@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:backgroundTint="#f2ead7"
+    android:padding="16dp">
+
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/appName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/baloo_bhaina"
+            android:text="GRVLFinder"
+            android:layout_gravity="center_horizontal"
+            android:textSize="36sp"
+            android:textColor="#475e41"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <TextView android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Routing provider base URL"
+            android:textStyle="bold"/>
+        <EditText
+            android:id="@+id/editRoutingBase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="https://router.project-osrm.org/route/v1/bicycle/"/>
+
+        <TextView android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="(Optional) API key param"
+            android:textStyle="bold"/>
+        <EditText
+            android:id="@+id/editApiKeyParam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. &amp;api_key=YOUR_KEY or &amp;key=..."/>
+
+        <Button
+            android:id="@+id/btnSaveSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@android:color/white"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"/>
+
+        <Button
+            android:id="@+id/btnPrivacyPolicy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Privacy Policy"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@android:color/white"/>
+
+        <Button
+            android:id="@+id/btnThirdPartyLicenses"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Third-Party Licenses"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+
+
+</ScrollView>

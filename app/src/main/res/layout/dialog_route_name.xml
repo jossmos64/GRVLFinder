@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_rounded"
+    android:padding="20dp">
+
+    <!-- Titel -->
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Geef je route een naam"
+        android:fontFamily="@font/baloo_bhaina"
+        android:textSize="18sp"
+        android:textColor="#000000"
+        android:paddingBottom="12dp" />
+
+    <!-- Input box -->
+    <EditText
+        android:id="@+id/routeNameInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_edittext_rounded"
+        android:fontFamily="@font/baloo_bhaina"
+        android:hint="bv. Zondag Gravelrit"
+        android:padding="12dp"
+        android:singleLine="true"
+        android:textColor="#000000"
+        android:textColorHint="#777777"
+        android:textSize="16sp" />
+
+    <!-- Knoppen rij -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:paddingTop="16dp">
+
+        <Button
+            android:id="@+id/cancelButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Annuleren"
+            android:fontFamily="@font/baloo_bhaina"
+            android:backgroundTint="#AAAAAA"
+            android:textColor="@android:color/white"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Opslaan"
+            android:fontFamily="@font/baloo_bhaina"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+</LinearLayout>

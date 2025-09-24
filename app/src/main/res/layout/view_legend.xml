@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/legendView"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#B3f2ead7"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/legendTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gravel Legend"
+        android:fontFamily="@font/baloo_bhaina"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#000000" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+
+        <!-- Groen -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp">
+
+            <ToggleButton
+                android:id="@+id/btnGreen"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/btn_green_selector"
+                android:textOn=""
+                android:textOff=""
+                android:checked="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  Good Gravel"
+                android:fontFamily="@font/baloo_bhaina"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Oranje -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp">
+
+            <ToggleButton
+                android:id="@+id/btnYellow"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/btn_yellow_selector"
+                android:textOn=""
+                android:textOff=""
+                android:checked="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  OK"
+                android:fontFamily="@font/baloo_bhaina"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Rood -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp">
+
+            <ToggleButton
+                android:id="@+id/btnRed"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/btn_red_selector"
+                android:textOn=""
+                android:textOff=""
+                android:checked="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  No Go Zone"
+                android:fontFamily="@font/baloo_bhaina"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>
