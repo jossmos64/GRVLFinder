@@ -42,6 +42,8 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     // osmdroid voor OpenStreetMap
-    implementation("org.osmdroid:osmdroid-android:6.1.12")
+    implementation("org.osmdroid:osmdroid-android:6.1.16")
     implementation("com.google.android.material:material:1.9.0")
+    implementation ("androidx.preference:preference:1.2.1")
+
 }

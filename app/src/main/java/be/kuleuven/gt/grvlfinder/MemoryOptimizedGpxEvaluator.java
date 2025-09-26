@@ -1,6 +1,4 @@
-// Create a new file: MemoryOptimizedGpxEvaluator.java
-// This version processes smaller chunks to avoid memory issues
-
+// Updated MemoryOptimizedGpxEvaluator.java with data structures for maps
 package be.kuleuven.gt.grvlfinder;
 
 import android.os.Handler;
@@ -19,20 +17,54 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Memory-optimized GPX Evaluator that processes route in smaller chunks to avoid OOM errors
+ * Memory-optimized GPX Evaluator with map visualization support
  */
 public class MemoryOptimizedGpxEvaluator {
     private static final String TAG = "MemoryOptimizedGpxEvaluator";
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    // Reduced chunk size to prevent memory issues
-    private static final double MAX_CHUNK_SIZE_KM = 2.0; // Process 2km chunks instead of entire route
+    private static final double MAX_CHUNK_SIZE_KM = 2.0;
     private static final double SEGMENT_LENGTH_METERS = 100.0;
-    private static final double BUFFER_DEGREES = 0.01; // Smaller buffer = less data
-
-    // Score thresholds - same as main app
+    private static final double BUFFER_DEGREES = 0.01;
     private static final int SCORE_GREEN_THRESHOLD = 20;
     private static final int SCORE_YELLOW_THRESHOLD = 10;
+
+    /**
+     * Data structure for route segments with quality scores for map visualization
+     */
+    public static class RouteSegmentResult {
+        public List<GeoPoint> points;
+        public int qualityScore;
+        public double distance;
+        public double slope;
+        public String surfaceType;
+        public String qualityDescription;
+
+        public RouteSegmentResult(List<GeoPoint> points, int qualityScore) {
+            this.points = new ArrayList<>(points);
+            this.qualityScore = qualityScore;
+            this.distance = calculateSegmentDistance(points);
+            this.slope = -1; // Will be set if elevation data available
+            this.surfaceType = "unknown";
+            this.qualityDescription = getQualityDescription(qualityScore);
+        }
+
+        private double calculateSegmentDistance(List<GeoPoint> points) {
+            if (points == null || points.size() < 2) return 0;
+            double total = 0;
+            for (int i = 1; i < points.size(); i++) {
+                total += points.get(i-1).distanceToAsDouble(points.get(i));
+            }
+            return total;
+        }
+
+        private String getQualityDescription(int score) {
+            if (score >= SCORE_GREEN_THRESHOLD) return "Excellent";
+            else if (score >= SCORE_YELLOW_THRESHOLD) return "Decent";
+            else if (score >= 0) return "Poor";
+            else return "Unknown";
+        }
+    }
 
     public static class OptimizedRouteAnalysis {
         public double totalDistance;
@@ -57,9 +89,13 @@ public class MemoryOptimizedGpxEvaluator {
         public double dataCoveragePercentage;
         public int totalRoadsInArea;
 
+        // NEW: Route segments for map visualization
+        public List<RouteSegmentResult> routeSegments;
+
         public OptimizedRouteAnalysis() {
             this.maxSlope = 0.0;
             this.steepestLocationDescription = "Unknown";
+            this.routeSegments = new ArrayList<>();
         }
 
         public void calculatePercentages() {
@@ -116,10 +152,12 @@ public class MemoryOptimizedGpxEvaluator {
         double distance;
         double slope = -1;
         PolylineResult matchedRoad = null;
+        List<GeoPoint> segmentPoints;
 
-        RouteSegment(GeoPoint start, GeoPoint end) {
+        RouteSegment(GeoPoint start, GeoPoint end, List<GeoPoint> points) {
             this.startPoint = start;
             this.endPoint = end;
+            this.segmentPoints = new ArrayList<>(points);
             this.distance = start.distanceToAsDouble(end);
         }
     }
@@ -137,7 +175,7 @@ public class MemoryOptimizedGpxEvaluator {
     }
 
     /**
-     * Memory-optimized GPX analysis that processes route in chunks
+     * Memory-optimized GPX analysis with map visualization data
      */
     public static void analyzeGpxRouteOptimized(List<GeoPoint> routePoints,
                                                 BikeTypeManager bikeTypeManager,
@@ -162,8 +200,8 @@ public class MemoryOptimizedGpxEvaluator {
 
                 if (callback != null) postProgress(callback, 5, "Preparing route analysis...");
 
-                // Step 1: Create segments
-                List<RouteSegment> allSegments = createRouteSegments(routePoints);
+                // Step 1: Create segments with point data for visualization
+                List<RouteSegment> allSegments = createRouteSegmentsWithPoints(routePoints);
                 analysis.totalSegmentsAnalyzed = allSegments.size();
 
                 if (callback != null) postProgress(callback, 10, "Creating route chunks...");
@@ -174,52 +212,53 @@ public class MemoryOptimizedGpxEvaluator {
 
                 if (callback != null) postProgress(callback, 15, "Processing " + chunks.size() + " route chunks...");
 
-                // Step 3: Process each chunk separately to avoid memory issues
+                // Step 3: Process each chunk
                 ScoreCalculator scoreCalculator = new ScoreCalculator(bikeTypeManager.getCurrentWeights());
                 scoreCalculator.setBikeTypeManager(bikeTypeManager);
 
                 int processedChunks = 0;
                 for (RouteChunk chunk : chunks) {
                     try {
-                        processRouteChunk(chunk, analysis, scoreCalculator, bikeTypeManager);
+                        processRouteChunkWithVisualization(chunk, analysis, scoreCalculator, bikeTypeManager);
                         processedChunks++;
 
-                        // Force garbage collection between chunks
                         System.gc();
 
                         if (callback != null) {
-                            int progress = 20 + (processedChunks * 70 / chunks.size());
+                            int progress = 20 + (processedChunks * 60 / chunks.size());
                             postProgress(callback, progress,
                                     "Processed chunk " + processedChunks + "/" + chunks.size());
                         }
 
-                        // Small delay to prevent overwhelming the API
                         Thread.sleep(200);
 
                     } catch (OutOfMemoryError e) {
                         Log.e(TAG, "Memory error processing chunk " + chunk.chunkIndex + ", skipping");
-                        // Mark segments as unknown and continue
                         for (RouteSegment segment : chunk.segments) {
                             analysis.unknownDistance += segment.distance;
+                            // Add unknown segment to visualization
+                            analysis.routeSegments.add(new RouteSegmentResult(segment.segmentPoints, -1));
                         }
                     } catch (Exception e) {
                         Log.w(TAG, "Error processing chunk " + chunk.chunkIndex + ": " + e.getMessage());
-                        // Mark segments as unknown and continue
                         for (RouteSegment segment : chunk.segments) {
                             analysis.unknownDistance += segment.distance;
+                            analysis.routeSegments.add(new RouteSegmentResult(segment.segmentPoints, -1));
                         }
                     }
                 }
 
-                // Step 4: Handle elevation if needed (simplified)
+                if (callback != null) postProgress(callback, 85, "Analyzing elevation data...");
+
+                // Step 4: Handle elevation
                 if (analysis.hasElevationData) {
-                    analyzeExistingElevationData(allSegments, analysis);
+                    analyzeExistingElevationDataWithVisualization(allSegments, analysis);
                 }
+
+                if (callback != null) postProgress(callback, 95, "Finalizing analysis...");
 
                 // Step 5: Calculate final metrics
                 calculateFinalMetrics(analysis);
-
-                if (callback != null) postProgress(callback, 95, "Finalizing analysis...");
 
                 Log.d(TAG, String.format("Analysis complete: %.1f%% green, %.1f%% yellow, %.1f%% red, %.1f%% unknown",
                         analysis.greenPercentage, analysis.yellowPercentage,
@@ -243,51 +282,52 @@ public class MemoryOptimizedGpxEvaluator {
     }
 
     /**
-     * Create smaller route chunks to process separately
+     * Create route segments with point data for map visualization
      */
-    private static List<RouteChunk> createRouteChunks(List<RouteSegment> segments) {
-        List<RouteChunk> chunks = new ArrayList<>();
+    private static List<RouteSegment> createRouteSegmentsWithPoints(List<GeoPoint> routePoints) {
+        List<RouteSegment> segments = new ArrayList<>();
+        if (routePoints.size() < 2) return segments;
 
-        double maxChunkDistanceMeters = MAX_CHUNK_SIZE_KM * 1000;
-        double currentChunkDistance = 0.0;
-        List<RouteSegment> currentChunkSegments = new ArrayList<>();
-        int chunkIndex = 0;
+        double accumulatedDistance = 0.0;
+        int segmentStartIndex = 0;
 
-        for (RouteSegment segment : segments) {
-            currentChunkSegments.add(segment);
-            currentChunkDistance += segment.distance;
+        for (int i = 1; i < routePoints.size(); i++) {
+            GeoPoint prev = routePoints.get(i - 1);
+            GeoPoint current = routePoints.get(i);
+            double d = prev.distanceToAsDouble(current);
+            accumulatedDistance += d;
 
-            if (currentChunkDistance >= maxChunkDistanceMeters ||
-                    currentChunkSegments.size() >= 20) { // Also limit by segment count
+            if (accumulatedDistance >= SEGMENT_LENGTH_METERS || i == routePoints.size() - 1) {
+                // Create segment with all points in this section
+                List<GeoPoint> segmentPoints = new ArrayList<>();
+                for (int j = segmentStartIndex; j <= i; j++) {
+                    segmentPoints.add(routePoints.get(j));
+                }
 
-                BoundingBox chunkBbox = calculateChunkBoundingBox(currentChunkSegments);
-                chunks.add(new RouteChunk(new ArrayList<>(currentChunkSegments), chunkBbox, chunkIndex++));
+                RouteSegment segment = new RouteSegment(
+                        routePoints.get(segmentStartIndex),
+                        routePoints.get(i),
+                        segmentPoints
+                );
+                segments.add(segment);
 
-                currentChunkSegments.clear();
-                currentChunkDistance = 0.0;
+                segmentStartIndex = i;
+                accumulatedDistance = 0.0;
             }
         }
-
-        // Add remaining segments as final chunk
-        if (!currentChunkSegments.isEmpty()) {
-            BoundingBox chunkBbox = calculateChunkBoundingBox(currentChunkSegments);
-            chunks.add(new RouteChunk(currentChunkSegments, chunkBbox, chunkIndex));
-        }
-
-        return chunks;
+        return segments;
     }
 
     /**
-     * Process a single route chunk
+     * Process route chunk and create visualization data
      */
-    private static void processRouteChunk(RouteChunk chunk,
-                                          OptimizedRouteAnalysis analysis,
-                                          ScoreCalculator scoreCalculator,
-                                          BikeTypeManager bikeTypeManager) throws Exception {
+    private static void processRouteChunkWithVisualization(RouteChunk chunk,
+                                                           OptimizedRouteAnalysis analysis,
+                                                           ScoreCalculator scoreCalculator,
+                                                           BikeTypeManager bikeTypeManager) throws Exception {
 
         Log.d(TAG, "Processing chunk " + chunk.chunkIndex + " with " + chunk.segments.size() + " segments");
 
-        // Fetch roads for this chunk only
         List<PolylineResult> chunkRoads = null;
         try {
             chunkRoads = OverpassServiceSync.fetchDataSync(chunk.boundingBox, scoreCalculator);
@@ -298,20 +338,24 @@ public class MemoryOptimizedGpxEvaluator {
             chunkRoads = new ArrayList<>();
         }
 
-        // Match segments to roads
+        // Match segments to roads and create visualization data
         for (RouteSegment segment : chunk.segments) {
             PolylineResult bestMatch = findClosestRoad(segment, chunkRoads);
 
             double segmentDistance = segment.distance;
+            int qualityScore = -1; // Unknown by default
+            String surfaceType = "unknown";
 
             if (bestMatch != null) {
                 segment.matchedRoad = bestMatch;
                 analysis.segmentsWithRoadData++;
 
-                int score = bestMatch.getScore();
-                if (score >= SCORE_GREEN_THRESHOLD) {
+                qualityScore = bestMatch.getScore();
+                surfaceType = bestMatch.getTags().getOrDefault("surface", "unknown");
+
+                if (qualityScore >= SCORE_GREEN_THRESHOLD) {
                     analysis.greenDistance += segmentDistance;
-                } else if (score >= SCORE_YELLOW_THRESHOLD) {
+                } else if (qualityScore >= SCORE_YELLOW_THRESHOLD) {
                     analysis.yellowDistance += segmentDistance;
                 } else {
                     analysis.redDistance += segmentDistance;
@@ -319,47 +363,20 @@ public class MemoryOptimizedGpxEvaluator {
             } else {
                 analysis.unknownDistance += segmentDistance;
             }
+
+            // Create visualization segment
+            RouteSegmentResult segmentResult = new RouteSegmentResult(segment.segmentPoints, qualityScore);
+            segmentResult.surfaceType = surfaceType;
+            analysis.routeSegments.add(segmentResult);
         }
 
-        // Clear chunk roads to free memory
+        // Clear memory
         chunkRoads.clear();
         chunkRoads = null;
     }
 
-    /**
-     * Calculate bounding box for a chunk of segments
-     */
-    private static BoundingBox calculateChunkBoundingBox(List<RouteSegment> segments) {
-        double minLat = Double.MAX_VALUE, maxLat = Double.MIN_VALUE;
-        double minLon = Double.MAX_VALUE, maxLon = Double.MIN_VALUE;
-
-        for (RouteSegment segment : segments) {
-            // Check start point
-            double lat = segment.startPoint.getLatitude();
-            double lon = segment.startPoint.getLongitude();
-            minLat = Math.min(minLat, lat);
-            maxLat = Math.max(maxLat, lat);
-            minLon = Math.min(minLon, lon);
-            maxLon = Math.max(maxLon, lon);
-
-            // Check end point
-            lat = segment.endPoint.getLatitude();
-            lon = segment.endPoint.getLongitude();
-            minLat = Math.min(minLat, lat);
-            maxLat = Math.max(maxLat, lat);
-            minLon = Math.min(minLon, lon);
-            maxLon = Math.max(maxLon, lon);
-        }
-
-        // Add smaller buffer to reduce data size
-        return new BoundingBox(maxLat + BUFFER_DEGREES, maxLon + BUFFER_DEGREES,
-                minLat - BUFFER_DEGREES, minLon - BUFFER_DEGREES);
-    }
-
-    /**
-     * Analyze elevation data that already exists in the GPX
-     */
-    private static void analyzeExistingElevationData(List<RouteSegment> segments, OptimizedRouteAnalysis analysis) {
+    private static void analyzeExistingElevationDataWithVisualization(List<RouteSegment> segments,
+                                                                      OptimizedRouteAnalysis analysis) {
         for (RouteSegment segment : segments) {
             double a1 = segment.startPoint.getAltitude();
             double a2 = segment.endPoint.getAltitude();
@@ -382,31 +399,54 @@ public class MemoryOptimizedGpxEvaluator {
         }
     }
 
-    // Helper methods (simplified versions)
-    private static void postProgress(OptimizedRouteAnalysisCallback callback, int progress, String message) {
-        new Handler(Looper.getMainLooper()).post(() -> callback.onProgress(progress, message));
-    }
+    // Helper methods (unchanged from original)
+    private static List<RouteChunk> createRouteChunks(List<RouteSegment> segments) {
+        List<RouteChunk> chunks = new ArrayList<>();
+        double maxChunkDistanceMeters = MAX_CHUNK_SIZE_KM * 1000;
+        double currentChunkDistance = 0.0;
+        List<RouteSegment> currentChunkSegments = new ArrayList<>();
+        int chunkIndex = 0;
 
-    private static List<RouteSegment> createRouteSegments(List<GeoPoint> routePoints) {
-        List<RouteSegment> segments = new ArrayList<>();
-        if (routePoints.size() < 2) return segments;
+        for (RouteSegment segment : segments) {
+            currentChunkSegments.add(segment);
+            currentChunkDistance += segment.distance;
 
-        double accumulatedDistance = 0.0;
-        GeoPoint segmentStart = routePoints.get(0);
+            if (currentChunkDistance >= maxChunkDistanceMeters ||
+                    currentChunkSegments.size() >= 20) {
 
-        for (int i = 1; i < routePoints.size(); i++) {
-            GeoPoint prev = routePoints.get(i - 1);
-            GeoPoint current = routePoints.get(i);
-            double d = prev.distanceToAsDouble(current);
-            accumulatedDistance += d;
+                BoundingBox chunkBbox = calculateChunkBoundingBox(currentChunkSegments);
+                chunks.add(new RouteChunk(new ArrayList<>(currentChunkSegments), chunkBbox, chunkIndex++));
 
-            if (accumulatedDistance >= SEGMENT_LENGTH_METERS || i == routePoints.size() - 1) {
-                segments.add(new RouteSegment(segmentStart, current));
-                segmentStart = current;
-                accumulatedDistance = 0.0;
+                currentChunkSegments.clear();
+                currentChunkDistance = 0.0;
             }
         }
-        return segments;
+
+        if (!currentChunkSegments.isEmpty()) {
+            BoundingBox chunkBbox = calculateChunkBoundingBox(currentChunkSegments);
+            chunks.add(new RouteChunk(currentChunkSegments, chunkBbox, chunkIndex));
+        }
+
+        return chunks;
+    }
+
+    private static BoundingBox calculateChunkBoundingBox(List<RouteSegment> segments) {
+        double minLat = Double.MAX_VALUE, maxLat = Double.MIN_VALUE;
+        double minLon = Double.MAX_VALUE, maxLon = Double.MIN_VALUE;
+
+        for (RouteSegment segment : segments) {
+            for (GeoPoint point : segment.segmentPoints) {
+                double lat = point.getLatitude();
+                double lon = point.getLongitude();
+                minLat = Math.min(minLat, lat);
+                maxLat = Math.max(maxLat, lat);
+                minLon = Math.min(minLon, lon);
+                maxLon = Math.max(maxLon, lon);
+            }
+        }
+
+        return new BoundingBox(maxLat + BUFFER_DEGREES, maxLon + BUFFER_DEGREES,
+                minLat - BUFFER_DEGREES, minLon - BUFFER_DEGREES);
     }
 
     private static PolylineResult findClosestRoad(RouteSegment segment, List<PolylineResult> roads) {
@@ -423,7 +463,7 @@ public class MemoryOptimizedGpxEvaluator {
         for (PolylineResult road : roads) {
             for (GeoPoint roadPoint : road.getPoints()) {
                 double distance = midpoint.distanceToAsDouble(roadPoint);
-                if (distance < minDistance && distance < 100.0) { // Reduced match distance
+                if (distance < minDistance && distance < 100.0) {
                     minDistance = distance;
                     bestMatch = road;
                 }
@@ -434,17 +474,18 @@ public class MemoryOptimizedGpxEvaluator {
     }
 
     private static void calculateFinalMetrics(OptimizedRouteAnalysis analysis) {
-        // Convert from meters to kilometers
         analysis.greenDistance = analysis.greenDistance / 1000.0;
         analysis.yellowDistance = analysis.yellowDistance / 1000.0;
         analysis.redDistance = analysis.redDistance / 1000.0;
         analysis.unknownDistance = analysis.unknownDistance / 1000.0;
 
-        // Calculate percentages
         analysis.calculatePercentages();
 
-        // Calculate data coverage
         analysis.dataCoveragePercentage = analysis.totalSegmentsAnalyzed > 0 ?
                 (analysis.segmentsWithRoadData / (double) analysis.totalSegmentsAnalyzed) * 100.0 : 0.0;
+    }
+
+    private static void postProgress(OptimizedRouteAnalysisCallback callback, int progress, String message) {
+        new Handler(Looper.getMainLooper()).post(() -> callback.onProgress(progress, message));
     }
 }

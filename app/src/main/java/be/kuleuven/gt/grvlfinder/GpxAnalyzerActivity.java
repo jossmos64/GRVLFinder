@@ -931,7 +931,7 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
 
     // Add this method to GpxAnalyzerActivity.java to show results
     private void showOptimizedAnalysisResults(MemoryOptimizedGpxEvaluator.OptimizedRouteAnalysis analysis) {
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        MemoryOptimizedGpxAnalysisDialog.show(this, analysis);
 
         StringBuilder message = new StringBuilder();
         message.append("GPX Route Analysis Results\n");
@@ -958,21 +958,6 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         message.append(String.format("Roads Found: %d total\n", analysis.totalRoadsInArea));
         message.append("Analysis Method: Memory-optimized chunked processing");
 
-        builder.setTitle("Route Analysis Results");
-        builder.setMessage(message.toString());
-        builder.setPositiveButton("OK", null);
-        builder.setNegativeButton("Share", (dialog, which) -> {
-            shareAnalysisText(message.toString());
-        });
-
-        androidx.appcompat.app.AlertDialog dialog = builder.create();
-        dialog.show();
-
-        // Make text scrollable
-        android.widget.TextView textView = dialog.findViewById(android.R.id.message);
-        if (textView != null) {
-            textView.setMovementMethod(android.text.method.ScrollingMovementMethod.getInstance());
-        }
     }
 
     // Add this helper method for sharing results
