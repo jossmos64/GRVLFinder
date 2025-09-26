@@ -31,7 +31,7 @@ public class BikeTypeSelectionDialog {
 
         // Title
         TextView title = new TextView(context);
-        title.setText("Selecteer je fietstype");
+        title.setText("Select your bicycle type");
         title.setTextSize(18f);
         title.setTypeface(Typeface.DEFAULT_BOLD);
 
@@ -72,13 +72,13 @@ public class BikeTypeSelectionDialog {
         checkboxContainer.setOrientation(LinearLayout.VERTICAL);
 
         CheckBox elevationCheckbox = new CheckBox(context);
-        elevationCheckbox.setText("Gebruik hoogtedata voor nauwkeurige hellingen");
+        elevationCheckbox.setText("Use elevation data for accurate slopes");
         elevationCheckbox.setTextSize(14f);
         elevationCheckbox.setChecked(elevationEnabled);
 
         // Add explanation text
         TextView explanation = new TextView(context);
-        explanation.setText("(Verhoogt nauwkeurigheid maar maakt zoeken langzamer)");
+        explanation.setText("(Increases accuracy but makes searching slower)");
         explanation.setTextSize(12f);
         explanation.setTextColor(0xFF666666);
 
@@ -136,14 +136,14 @@ public class BikeTypeSelectionDialog {
         switch (bikeType) {
             case RACE_ROAD:
             case GRAVEL_BIKE:
-                elevationInfo.setText("Hoogte-analyse optioneel");
+                elevationInfo.setText("Height analysis optional");
                 break;
             case RACE_BIKEPACKING:
             case GRAVEL_BIKEPACKING:
-                elevationInfo.setText("Hoogte-analyse altijd ingeschakeld");
+                elevationInfo.setText("Height analysis always enabled - (makes searching slower)");
                 break;
             case CUSTOM:
-                elevationInfo.setText("Hoogte-analyse afhankelijk van instellingen");
+                elevationInfo.setText("Height analysis depending on settings");
                 break;
         }
 
@@ -166,7 +166,7 @@ public class BikeTypeSelectionDialog {
         // Add custom criteria button for CUSTOM mode
         if (bikeType == BikeType.CUSTOM) {
             Button customButton = new Button(context);
-            customButton.setText("Configureer criteria");
+            customButton.setText("Configure criteria");
             customButton.setTextSize(12f);
             customButton.setBackgroundColor(0xFFDDDDDD);
             customButton.setPadding(dpToPx(context, 8), dpToPx(context, 4),

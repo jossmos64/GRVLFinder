@@ -1,6 +1,7 @@
 package be.kuleuven.gt.grvlfinder;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -28,7 +29,7 @@ public class MainActivity extends BaseMapActivity {
     private static final double MAX_VIEWPORT_SPAN_DEG = 0.3;
     private static final long CACHE_TTL_MS = 60 * 1000;
 
-    private Button findButton, exportButton, undoButton, criteriaButton, drawExploreButton;
+    private Button findButton, exportButton, undoButton, criteriaButton, drawExploreButton, gpxAnalyzerButton;
     private ProgressBar progressBar;
     private Switch satelliteSwitch;
 
@@ -81,6 +82,7 @@ public class MainActivity extends BaseMapActivity {
         drawExploreButton = findViewById(R.id.drawExploreButton);
         progressBar = findViewById(R.id.progressBar);
         bikeTypeButton = findViewById(R.id.bikeTypeButton);
+        gpxAnalyzerButton = findViewById(R.id.gpxAnalyzerButton); // New button
 
         LinearLayout legendContainer = findViewById(R.id.legendContainer);
         if (legendContainer != null) {
@@ -109,6 +111,7 @@ public class MainActivity extends BaseMapActivity {
         exportButton.setOnClickListener(v -> handleExportGpx());
         undoButton.setOnClickListener(v -> routeManager.undoLastSegment());
         bikeTypeButton.setOnClickListener(v -> showBikeTypeDialog());
+        gpxAnalyzerButton.setOnClickListener(v -> openGpxAnalyzer()); // New handler
 
         if (criteriaButton != null) {
             criteriaButton.setOnClickListener(v ->
@@ -131,6 +134,11 @@ public class MainActivity extends BaseMapActivity {
             public boolean longPressHelper(GeoPoint p) { return false; }
         };
         map.getOverlays().add(new MapEventsOverlay(mapReceiver));
+    }
+
+    private void openGpxAnalyzer() {
+        Intent intent = new Intent(this, GpxAnalyzerActivity.class);
+        startActivity(intent);
     }
 
     private void toggleDrawExploreMode() {

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="be.kuleuven.gt.grvlfinder">
 
-    <!-- Permissies voor netwerk en locatie -->
+    <!-- Permissions for network and location -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <!-- For downloads -->
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
@@ -36,22 +37,92 @@
         </activity>
 
         <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
+        <activity
             android:name=".SettingsActivity"
             android:label="Instellingen"
             android:parentActivityName=".MainActivity"
-            android:exported="true"
-        />
-
-        <!-- Voeg dit toe: -->
-        <activity
-            android:name=".MainActivity"
             android:exported="true" />
 
         <activity
             android:name=".PrivacyPolicyActivity" />
 
+        <!-- GPX Analyzer Activity with intent filters for file sharing -->
+        <activity
+            android:name=".GpxAnalyzerActivity"
+            android:exported="true"
+            android:label="GPX Route Analyzer">
+
+            <!-- Handle shared files from other apps (Strava, Garmin, etc.) -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/gpx+xml" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="text/xml" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <!-- Handle opening GPX files directly -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/gpx+xml" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/gpx+xml" />
+            </intent-filter>
+
+            <!-- Handle .gpx file extensions specifically -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file"
+                    android:pathPattern=".*\\.gpx" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content"
+                    android:pathPattern=".*\\.gpx" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:host="connect.garmin.com"
+                    android:scheme="https" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:host="www.strava.com"
+                    android:scheme="https"
+                    android:pathPrefix="/routes" />
+            </intent-filter>
+
+        </activity>
+
     </application>
-
-
-
 </manifest>

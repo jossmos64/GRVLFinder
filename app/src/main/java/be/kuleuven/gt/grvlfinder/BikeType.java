@@ -1,8 +1,8 @@
 package be.kuleuven.gt.grvlfinder;
 
 public enum BikeType {
-    RACE_ROAD("Race Bike on Roads", "🚴‍♂️", "Fast rides on asphalt and paved roads"),
-    GRAVEL_BIKE("Gravel Bike", "🚵‍♂️", "Adventure rides on gravel and unpaved roads"),
+    RACE_ROAD("Race Bike - Roads", "🚴‍♂️", "Fast rides on asphalt and paved roads"),
+    GRAVEL_BIKE("Gravel Bike - Gravel", "🚵‍♂️", "Adventure rides on gravel and unpaved roads"),
     RACE_BIKEPACKING("Bikepacking - Race Bike", "🎒🚴‍♂️", "Long distance touring on paved roads"),
     GRAVEL_BIKEPACKING("Bikepacking - Gravel", "🎒🚵‍♂️", "Long distance touring on gravel roads"),
     CUSTOM("Custom Mode", "⚙️", "Configure your own criteria");
@@ -33,3 +33,5 @@ public enum BikeType {
         return emoji + " " + displayName;
     }
 }
+
+// okey you have read all the files I suspect, I want a function that evaluates an gpx file that you have uploaded in the app. The evaluation says based on what ride mode is selected how many km of gravel roads or good asphalt roads is in your route, what your steepest slope is (also where this is)

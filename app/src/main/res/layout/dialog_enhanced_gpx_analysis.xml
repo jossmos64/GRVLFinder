@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Basic Route Information -->
+        <TextView
+            android:id="@+id/routeInfoText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="16dp"
+            android:background="#F5F5F5"
+            android:padding="12dp"
+            android:text="Route information will appear here" />
+
+        <!-- Quality Assessment -->
+        <TextView
+            android:id="@+id/qualityAssessmentText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"
+            android:padding="8dp"
+            android:background="#E8F5E8"
+            android:text="Quality assessment will appear here" />
+
+        <!-- Road Quality Categories -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Road Quality Breakdown"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Green Category (Excellent Roads) -->
+        <LinearLayout
+            android:id="@+id/greenCategoryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="8dp"
+            android:background="#F0F8F0"
+            android:padding="8dp" />
+
+        <!-- Yellow Category (Decent Roads) -->
+        <LinearLayout
+            android:id="@+id/yellowCategoryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="8dp"
+            android:background="#FFF8E1"
+            android:padding="8dp" />
+
+        <!-- Red Category (Poor Roads) -->
+        <LinearLayout
+            android:id="@+id/redCategoryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="8dp"
+            android:background="#FFEBEE"
+            android:padding="8dp" />
+
+        <!-- Unknown Category -->
+        <LinearLayout
+            android:id="@+id/unknownCategoryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:background="#F5F5F5"
+            android:padding="8dp" />
+
+        <!-- Elevation Information -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Elevation Analysis"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/elevationInfoText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp"
+            android:background="#F0F8FF"
+            android:padding="12dp"
+            android:text="Elevation information will appear here" />
+
+        <!-- Surface Breakdown (Expandable) -->
+        <TextView
+            android:id="@+id/surfaceBreakdownToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="▶ Surface Details (tap to show)"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#666666"
+            android:layout_marginBottom="8dp"
+            android:padding="8dp"
+            android:background="#EEEEEE"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <LinearLayout
+            android:id="@+id/surfaceBreakdownContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:background="#FAFAFA"
+            android:padding="8dp"
+            android:visibility="gone" />
+
+        <!-- Recommendations -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Recommendations"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/recommendationsText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp"
+            android:background="#FFFEF7"
+            android:padding="12dp"
+            android:text="Recommendations will appear here" />
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/shareAnalysisButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Share Analysis"
+                android:layout_marginEnd="8dp"
+                style="@style/Widget.AppCompat.Button.Borderless.Colored" />
+
+            <Button
+                android:id="@+id/closeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Close"
+                style="@style/Widget.AppCompat.Button.Colored" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
