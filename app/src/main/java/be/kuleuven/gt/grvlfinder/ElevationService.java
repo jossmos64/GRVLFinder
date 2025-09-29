@@ -26,6 +26,7 @@ public class ElevationService {
 
     /**
      * Add slope data to roads using strategic elevation sampling
+     * UPDATED: Now also sets altitude on GeoPoints for GPX export
      */
     public static void addSlopeDataToRoads(List<PolylineResult> roads, RoadElevationCallback callback) {
         if (roads == null || roads.isEmpty()) {
@@ -71,12 +72,15 @@ public class ElevationService {
                     double maxSlope = calculateRoadMaxSlope(request, roadElevations);
                     road.setMaxSlope(maxSlope);
 
+                    // CRITICAL FIX: Set altitude on all points in the road
+                    setAltitudesOnRoad(road.getPoints(), request.elevationPoints, roadElevations);
+
                     Log.d(TAG, "Road " + request.roadIndex + ": calculated max slope = " + maxSlope + "%");
                 }
 
                 new Handler(Looper.getMainLooper()).post(() -> {
                     if (callback != null) {
-                        Log.d(TAG, "Successfully calculated slope data for all roads");
+                        Log.d(TAG, "Successfully calculated slope data and set elevations for all roads");
                         callback.onSuccess(roads);
                     }
                 });
@@ -90,6 +94,37 @@ public class ElevationService {
                 });
             }
         });
+    }
+
+    /**
+     * NEW: Set altitude values on all road points by interpolating from sampled elevations
+     */
+    private static void setAltitudesOnRoad(List<GeoPoint> roadPoints,
+                                           List<GeoPoint> sampledPoints,
+                                           List<Double> sampledElevations) {
+        if (sampledPoints.size() != sampledElevations.size()) {
+            Log.w(TAG, "Mismatch between sampled points and elevations");
+            return;
+        }
+
+        // For each road point, find nearest sampled point and use its elevation
+        for (GeoPoint roadPoint : roadPoints) {
+            double minDist = Double.MAX_VALUE;
+            double closestElevation = 0.0;
+
+            for (int i = 0; i < sampledPoints.size(); i++) {
+                double dist = roadPoint.distanceToAsDouble(sampledPoints.get(i));
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestElevation = sampledElevations.get(i);
+                }
+            }
+
+            // Set the altitude on this point
+            roadPoint.setAltitude(closestElevation);
+        }
+
+        Log.d(TAG, "Set altitude on " + roadPoints.size() + " points");
     }
 
     /**
@@ -110,13 +145,10 @@ public class ElevationService {
         double sampleInterval;
 
         if (totalDistance < 100) {
-            // Short roads: start, middle, end (3 points minimum)
             targetSamples = 3;
         } else if (totalDistance < 500) {
-            // Medium roads: every ~75m
             targetSamples = Math.max(4, (int)(totalDistance / 75));
         } else {
-            // Long roads: every ~100m but cap at 10 samples to avoid API limits
             targetSamples = Math.min(10, (int)(totalDistance / 100));
         }
 
@@ -126,7 +158,7 @@ public class ElevationService {
 
         // Create sample points along the road
         double currentDistance = 0.0;
-        double nextSampleDistance = 0.0; // Start with first point
+        double nextSampleDistance = 0.0;
 
         for (int i = 0; i < roadPoints.size() - 1; i++) {
             GeoPoint p1 = roadPoints.get(i);
@@ -135,14 +167,11 @@ public class ElevationService {
             double segmentStart = currentDistance;
             double segmentEnd = currentDistance + segmentDistance;
 
-            // Add sample points within this segment
             while (nextSampleDistance <= segmentEnd && request.elevationPoints.size() < targetSamples) {
                 if (nextSampleDistance <= segmentStart) {
-                    // Sample is at the start of segment
                     request.elevationPoints.add(p1);
                     request.segmentDistances.add(nextSampleDistance);
                 } else {
-                    // Interpolate within segment
                     double ratio = (nextSampleDistance - segmentStart) / segmentDistance;
                     double lat = p1.getLatitude() + ratio * (p2.getLatitude() - p1.getLatitude());
                     double lon = p1.getLongitude() + ratio * (p2.getLongitude() - p1.getLongitude());
@@ -180,7 +209,6 @@ public class ElevationService {
 
         List<Double> segmentSlopes = new ArrayList<>();
 
-        // Calculate slope between each consecutive pair of elevation points
         for (int i = 1; i < elevations.size() && i < request.segmentDistances.size(); i++) {
             double elevation1 = elevations.get(i - 1);
             double elevation2 = elevations.get(i);
@@ -190,7 +218,6 @@ public class ElevationService {
             double horizontalDistance = distance2 - distance1;
             double elevationDiff = Math.abs(elevation2 - elevation1);
 
-            // Validate data
             if (Double.isNaN(elevation1) || Double.isNaN(elevation2)) {
                 Log.w(TAG, "NaN elevation values, skipping segment");
                 continue;
@@ -222,13 +249,12 @@ public class ElevationService {
             return -1;
         }
 
-        // Return the maximum slope found
         segmentSlopes.sort(Double::compareTo);
         double maxSlope = segmentSlopes.get(segmentSlopes.size() - 1);
 
         Log.d(TAG, "All slopes: " + segmentSlopes + " -> Max: " + maxSlope + "%");
 
-        return Math.min(35.0, maxSlope); // Cap at 35% for sanity
+        return Math.min(35.0, maxSlope);
     }
 
     /**
@@ -236,7 +262,7 @@ public class ElevationService {
      */
     private static List<Double> fetchElevationsInBatches(List<GeoPoint> points) throws Exception {
         List<Double> allElevations = new ArrayList<>();
-        int batchSize = 10; // Conservative batch size
+        int batchSize = 10;
 
         for (int start = 0; start < points.size(); start += batchSize) {
             int end = Math.min(start + batchSize, points.size());
@@ -250,16 +276,14 @@ public class ElevationService {
                 allElevations.addAll(batchElevations);
             } catch (Exception e) {
                 Log.w(TAG, "Batch failed: " + e.getMessage() + ". Using defaults.");
-                // Add default elevations
                 for (int i = 0; i < batch.size(); i++) {
                     allElevations.add(100.0);
                 }
             }
 
-            // Rate limiting
             if (end < points.size()) {
                 try {
-                    Thread.sleep(600); // 600ms between batches
+                    Thread.sleep(600);
                 } catch (InterruptedException ignored) {}
             }
         }
@@ -331,11 +355,10 @@ public class ElevationService {
                 double elevation = result.getDouble("elevation");
                 elevations.add(elevation);
             } else {
-                elevations.add(100.0); // Default elevation
+                elevations.add(100.0);
             }
         }
 
-        // Ensure we have the expected number of elevations
         while (elevations.size() < expectedCount) {
             elevations.add(100.0);
         }
@@ -368,7 +391,7 @@ public class ElevationService {
                         Math.sin(deltaLonRad / 2) * Math.sin(deltaLonRad / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        return 6371000 * c; // Earth's radius in meters
+        return 6371000 * c;
     }
 
     /**

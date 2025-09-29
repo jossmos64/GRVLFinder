@@ -19,25 +19,31 @@ public class SplashActivity extends AppCompatActivity {
         boolean isFirstLaunch = prefs.getBoolean(KEY_FIRST_LAUNCH, true);
 
         if (!isFirstLaunch) {
-            // Niet de eerste keer → direct naar MainActivity
+            // Not first time - go directly to MainActivity
             startMainActivity();
             return;
         }
 
-        // Eerste keer → toon layout met logo en Go-knop
+        // First time - show splash with logo and Go button
         setContentView(R.layout.activity_splash);
 
         Button btnGo = findViewById(R.id.goButton);
         btnGo.setOnClickListener(v -> {
-            // Sla op dat de app al een keer is geopend
+            // Mark that app has been opened
             prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply();
-            startMainActivity();
+            startTutorialActivity();
         });
+    }
+
+    private void startTutorialActivity() {
+        Intent intent = new Intent(SplashActivity.this, TutorialActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private void startMainActivity() {
         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
         startActivity(intent);
-        finish(); // sluit SplashActivity
+        finish();
     }
 }

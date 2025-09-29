@@ -43,17 +43,18 @@ public class MainActivity extends BaseMapActivity {
     private List<PolylineResult> lastResultsCache = null;
     private long lastQueryTimeMs = 0;
 
-    private boolean isDrawingRoute = false; // nieuwe state
+    private boolean isDrawingRoute = false;
+    private boolean hasLoadedRoads = false; // NEW: Track if roads have been loaded
     private Button bikeTypeButton;
     private BikeTypeManager bikeTypeManager;
-    private View legendView; // Store reference to legend view
+    private View legendView;
+    private Button tutorialButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Map initialiseren via BaseMapActivity
         initializeMap(findViewById(R.id.map));
 
         initializeWeights();
@@ -61,7 +62,9 @@ public class MainActivity extends BaseMapActivity {
         filterManager = new FilterManager();
         routeManager = new RouteManager(map);
         bikeTypeManager = new BikeTypeManager(prefs);
+
         scoreCalculator.setBikeTypeManager(bikeTypeManager);
+        routeManager.setDependencies(bikeTypeManager, scoreCalculator);
 
         bindUI();
         setupEventHandlers();
@@ -71,10 +74,7 @@ public class MainActivity extends BaseMapActivity {
         settingsButton.setOnClickListener(v -> {
             startActivity(new android.content.Intent(MainActivity.this, SettingsActivity.class));
         });
-
     }
-
-    // In MainActivity.java, update the bindUI() method to remove Strava button code:
 
     private void bindUI() {
         findButton = findViewById(R.id.findButton);
@@ -85,14 +85,12 @@ public class MainActivity extends BaseMapActivity {
         progressBar = findViewById(R.id.progressBar);
         bikeTypeButton = findViewById(R.id.bikeTypeButton);
         gpxAnalyzerButton = findViewById(R.id.gpxAnalyzerButton);
-
-        // REMOVED: Strava button initialization (now in GpxAnalyzerActivity)
+        tutorialButton = findViewById(R.id.tutorialButton);
 
         LinearLayout legendContainer = findViewById(R.id.legendContainer);
         if (legendContainer != null) {
             legendView = LegendView.create(this);
             legendContainer.addView(legendView);
-            // Update legend for current bike type
             LegendView.updateForBikeType(legendView, bikeTypeManager.getCurrentBikeType());
         }
 
@@ -110,13 +108,13 @@ public class MainActivity extends BaseMapActivity {
         filterManager.setFilterCallback(() -> updateMapFilter());
     }
 
-
     private void setupEventHandlers() {
         findButton.setOnClickListener(v -> handleFindGravel());
         exportButton.setOnClickListener(v -> handleExportGpx());
         undoButton.setOnClickListener(v -> routeManager.undoLastSegment());
         bikeTypeButton.setOnClickListener(v -> showBikeTypeDialog());
-        gpxAnalyzerButton.setOnClickListener(v -> openGpxAnalyzer()); // New handler
+        gpxAnalyzerButton.setOnClickListener(v -> openGpxAnalyzer());
+        tutorialButton.setOnClickListener(v -> openTutorial());
 
         if (criteriaButton != null) {
             criteriaButton.setOnClickListener(v ->
@@ -125,7 +123,6 @@ public class MainActivity extends BaseMapActivity {
 
         drawExploreButton.setOnClickListener(v -> toggleDrawExploreMode());
 
-        // Tap events op de kaart
         MapEventsReceiver mapReceiver = new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
@@ -147,6 +144,12 @@ public class MainActivity extends BaseMapActivity {
     }
 
     private void toggleDrawExploreMode() {
+        // UPDATED: Check if roads have been loaded before enabling draw mode
+        if (!hasLoadedRoads && !isDrawingRoute) {
+            Toast.makeText(this, "Please use 'Find Gravel' first to load roads in this area", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         LinearLayout bottomContainer = findViewById(R.id.bottomButtonContainer);
 
         if (!isDrawingRoute) {
@@ -154,14 +157,22 @@ public class MainActivity extends BaseMapActivity {
             isDrawingRoute = true;
             drawExploreButton.setText("🔍");
             bottomContainer.setVisibility(View.VISIBLE);
-            Toast.makeText(this, "Route tekenen geactiveerd", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Route drawing activated - tap anywhere to draw", Toast.LENGTH_SHORT).show();
+
+            if (lastResultsCache != null) {
+                drawResults(filterManager.applyFilter(lastResultsCache));
+            }
         } else {
             // Wisselen naar Explore modus
             isDrawingRoute = false;
             drawExploreButton.setText("✏️");
             bottomContainer.setVisibility(View.GONE);
             routeManager.clearRoute();
-            Toast.makeText(this, "Explore modus geactiveerd", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Explore mode activated", Toast.LENGTH_SHORT).show();
+
+            if (lastResultsCache != null) {
+                drawResults(filterManager.applyFilter(lastResultsCache));
+            }
         }
     }
 
@@ -171,7 +182,7 @@ public class MainActivity extends BaseMapActivity {
         double lonSpan = bbox.getLonEast() - bbox.getLonWest();
 
         if (latSpan > MAX_VIEWPORT_SPAN_DEG || lonSpan > MAX_VIEWPORT_SPAN_DEG) {
-            Toast.makeText(this, "Viewport te groot - zoom in aub.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Viewport too large - please zoom in.", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -199,6 +210,7 @@ public class MainActivity extends BaseMapActivity {
                 lastBBoxQueried = bbox;
                 lastResultsCache = results;
                 lastQueryTimeMs = System.currentTimeMillis();
+                hasLoadedRoads = true; // UPDATED: Mark roads as loaded
                 routeManager.setLastResults(results);
                 updateMapFilter();
 
@@ -210,7 +222,7 @@ public class MainActivity extends BaseMapActivity {
             public void onError(String error) {
                 findButton.setEnabled(true);
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(MainActivity.this, "Fout: " + error, Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Error: " + error, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -220,19 +232,19 @@ public class MainActivity extends BaseMapActivity {
         switch (currentType) {
             case RACE_ROAD:
                 return bikeTypeManager.shouldFetchElevationData() ?
-                        "Zoeken naar wegen met hoogte-analyse..." : "Zoeken naar wegen...";
+                        "Searching for roads with elevation analysis..." : "Searching for roads...";
             case GRAVEL_BIKE:
                 return bikeTypeManager.shouldFetchElevationData() ?
-                        "Zoeken naar gravelwegen met hoogte-analyse..." : "Zoeken naar gravelwegen...";
+                        "Searching for gravel roads with elevation analysis..." : "Searching for gravel roads...";
             case RACE_BIKEPACKING:
-                return "Zoeken naar touring routes met hoogte-analyse...";
+                return "Searching for touring routes with elevation analysis...";
             case GRAVEL_BIKEPACKING:
-                return "Zoeken naar adventure routes met hoogte-analyse...";
+                return "Searching for adventure routes with elevation analysis...";
             case CUSTOM:
                 return bikeTypeManager.shouldFetchElevationData() ?
-                        "Zoeken met custom criteria en hoogte-analyse..." : "Zoeken met custom criteria...";
+                        "Searching with custom criteria and elevation analysis..." : "Searching with custom criteria...";
             default:
-                return "Zoeken...";
+                return "Searching...";
         }
     }
 
@@ -240,27 +252,26 @@ public class MainActivity extends BaseMapActivity {
         BikeType currentType = bikeTypeManager.getCurrentBikeType();
         switch (currentType) {
             case RACE_ROAD:
-                return "Gevonden: " + resultCount + " wegen";
+                return "Found: " + resultCount + " roads";
             case GRAVEL_BIKE:
-                return "Gevonden: " + resultCount + " gravelwegen";
+                return "Found: " + resultCount + " gravel roads";
             case RACE_BIKEPACKING:
-                return "Gevonden: " + resultCount + " touring routes";
+                return "Found: " + resultCount + " touring routes";
             case GRAVEL_BIKEPACKING:
-                return "Gevonden: " + resultCount + " adventure routes";
+                return "Found: " + resultCount + " adventure routes";
             case CUSTOM:
-                return "Gevonden: " + resultCount + " routes (custom)";
+                return "Found: " + resultCount + " routes (custom)";
             default:
-                return "Gevonden: " + resultCount + " wegen";
+                return "Found: " + resultCount + " roads";
         }
     }
 
     private void handleExportGpx() {
         if (!routeManager.hasRoute()) {
-            Toast.makeText(this, "Geen route getekend", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No route drawn", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Inflate custom dialog layout
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_route_name, null);
         EditText input = dialogView.findViewById(R.id.routeNameInput);
         Button cancelBtn = dialogView.findViewById(R.id.cancelButton);
@@ -270,10 +281,8 @@ public class MainActivity extends BaseMapActivity {
                 .setView(dialogView)
                 .create();
 
-        // Cancel button
         cancelBtn.setOnClickListener(v -> dialog.dismiss());
 
-        // Save button
         saveBtn.setOnClickListener(v -> {
             String routeName = input.getText().toString().trim();
             if (routeName.isEmpty()) {
@@ -281,17 +290,54 @@ public class MainActivity extends BaseMapActivity {
             }
             String filename = routeName.replaceAll("[^a-zA-Z0-9_\\-]", "_") + ".gpx";
 
-            GpxExporter.exportRoute(this, routeManager.getDrawnRoute(), filename, new GpxExporter.ExportCallback() {
-                @Override
-                public void onSuccess(String message) {
-                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
-                }
+            // Show progress
+            progressBar.setVisibility(View.VISIBLE);
+            Toast.makeText(this, "Adding elevation data to route...", Toast.LENGTH_SHORT).show();
 
-                @Override
-                public void onError(String error) {
-                    Toast.makeText(MainActivity.this, error, Toast.LENGTH_SHORT).show();
-                }
-            });
+            // UPDATED: Use helper to ensure elevation data is added
+            GpxElevationHelper.addElevationToRoute(this, routeManager.getDrawnRoute(),
+                    new GpxElevationHelper.ElevationCallback() {
+                        @Override
+                        public void onElevationAdded(List<GeoPoint> routeWithElevation) {
+                            progressBar.setVisibility(View.GONE);
+
+                            // Export with elevation data
+                            GpxExporter.exportRouteWithElevation(MainActivity.this, routeWithElevation, filename,
+                                    new GpxExporter.ExportCallback() {
+                                        @Override
+                                        public void onSuccess(String message) {
+                                            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        @Override
+                                        public void onError(String error) {
+                                            Toast.makeText(MainActivity.this, error, Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            progressBar.setVisibility(View.GONE);
+                            Toast.makeText(MainActivity.this,
+                                    "Could not fetch elevation data. Exporting without elevation.",
+                                    Toast.LENGTH_LONG).show();
+
+                            // Export without elevation as fallback
+                            GpxExporter.exportRouteWithElevation(MainActivity.this, routeManager.getDrawnRoute(), filename,
+                                    new GpxExporter.ExportCallback() {
+                                        @Override
+                                        public void onSuccess(String message) {
+                                            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        @Override
+                                        public void onError(String error) {
+                                            Toast.makeText(MainActivity.this, error, Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                    });
 
             dialog.dismiss();
         });
@@ -316,16 +362,21 @@ public class MainActivity extends BaseMapActivity {
             pl.setPoints(pr.getPoints());
 
             int score = pr.getScore();
-            if (score >= 20) pl.setColor(0xDD228B22); // groen
-            else if (score >= 10) pl.setColor(0xDDFFA500); // oranje
-            else pl.setColor(0xCCDC143C); // rood
+            if (score >= 20) pl.setColor(0xDD228B22); // green
+            else if (score >= 10) pl.setColor(0xDDFFA500); // orange
+            else pl.setColor(0xCCDC143C); // red
 
             pl.setWidth(12.0f);
 
-            pl.setOnClickListener((polyline, mapView, eventPos) -> {
-                PolylineDetailsDialog.show(MainActivity.this, pr);
-                return true;
-            });
+            // Only enable clicking when NOT in drawing mode
+            if (!isDrawingRoute) {
+                pl.setOnClickListener((polyline, mapView, eventPos) -> {
+                    PolylineDetailsDialog.show(MainActivity.this, pr);
+                    return true;
+                });
+            } else {
+                pl.setOnClickListener(null);
+            }
 
             map.getOverlays().add(pl);
             currentPolylines.add(pl);
@@ -397,7 +448,7 @@ public class MainActivity extends BaseMapActivity {
                         invalidateCache();
 
                         String message = enabled ?
-                                "Hoogte-analyse ingeschakeld" : "Hoogte-analyse uitgeschakeld";
+                                "Elevation analysis enabled" : "Elevation analysis disabled";
                         Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -423,10 +474,8 @@ public class MainActivity extends BaseMapActivity {
     private void updateUIForBikeType() {
         BikeType currentType = bikeTypeManager.getCurrentBikeType();
 
-        // Update bike type button emoji
         bikeTypeButton.setText(currentType.getEmoji());
 
-        // Update find button text based on bike type
         switch (currentType) {
             case RACE_ROAD:
                 findButton.setText("Find Roads");
@@ -445,14 +494,12 @@ public class MainActivity extends BaseMapActivity {
                 break;
         }
 
-        // Update criteria button behavior
         if (currentType == BikeType.CUSTOM) {
-            criteriaButton.setText("🎛️"); // Different icon for custom mode
+            criteriaButton.setText("🎛️");
         } else {
-            criteriaButton.setText("⚙️"); // Standard settings icon
+            criteriaButton.setText("⚙️");
         }
 
-        // Update legend for current bike type
         if (legendView != null) {
             LegendView.updateForBikeType(legendView, currentType);
         }
@@ -462,5 +509,11 @@ public class MainActivity extends BaseMapActivity {
         lastBBoxQueried = null;
         lastResultsCache = null;
         lastQueryTimeMs = 0;
+        hasLoadedRoads = false; // UPDATED: Reset roads loaded flag
+    }
+
+    private void openTutorial() {
+        Intent intent = new Intent(this, TutorialActivity.class);
+        startActivity(intent);
     }
 }
