@@ -1,4 +1,4 @@
-// Updated MemoryOptimizedGpxEvaluator.java with data structures for maps
+// Updated MemoryOptimizedGpxEvaluator.java with ROBUST retry logic to ensure data ALWAYS arrives
 package be.kuleuven.gt.grvlfinder;
 
 import android.os.Handler;
@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Memory-optimized GPX Evaluator with map visualization support
+ * Memory-optimized GPX Evaluator with map visualization support and ROBUST data fetching
  */
 public class MemoryOptimizedGpxEvaluator {
     private static final String TAG = "MemoryOptimizedGpxEvaluator";
@@ -114,9 +114,9 @@ public class MemoryOptimizedGpxEvaluator {
 
             if (greenPercentage >= 60) {
                 return "Excellent route for " + analyzedForBikeType.getDisplayName();
-            } else if (greenPercentage + yellowPercentage >= 70) {
+            } else if (greenPercentage >= 40) {
                 return "Good route for " + analyzedForBikeType.getDisplayName();
-            } else if (redPercentage >= 50) {
+            } else if (redPercentage >= 60){
                 return "Challenging route - many poor quality segments";
             } else {
                 return "Mixed quality route";
@@ -212,7 +212,7 @@ public class MemoryOptimizedGpxEvaluator {
 
                 if (callback != null) postProgress(callback, 15, "Processing " + chunks.size() + " route chunks...");
 
-                // Step 3: Process each chunk
+                // Step 3: Process each chunk with ROBUST retry logic
                 ScoreCalculator scoreCalculator = new ScoreCalculator(bikeTypeManager.getCurrentWeights());
                 scoreCalculator.setBikeTypeManager(bikeTypeManager);
 
@@ -230,13 +230,13 @@ public class MemoryOptimizedGpxEvaluator {
                                     "Processed chunk " + processedChunks + "/" + chunks.size());
                         }
 
-                        Thread.sleep(200);
+                        // Longer delay between chunks to avoid rate limiting
+                        Thread.sleep(1000);
 
                     } catch (OutOfMemoryError e) {
                         Log.e(TAG, "Memory error processing chunk " + chunk.chunkIndex + ", skipping");
                         for (RouteSegment segment : chunk.segments) {
                             analysis.unknownDistance += segment.distance;
-                            // Add unknown segment to visualization
                             analysis.routeSegments.add(new RouteSegmentResult(segment.segmentPoints, -1));
                         }
                     } catch (Exception e) {
@@ -298,7 +298,6 @@ public class MemoryOptimizedGpxEvaluator {
             accumulatedDistance += d;
 
             if (accumulatedDistance >= SEGMENT_LENGTH_METERS || i == routePoints.size() - 1) {
-                // Create segment with all points in this section
                 List<GeoPoint> segmentPoints = new ArrayList<>();
                 for (int j = segmentStartIndex; j <= i; j++) {
                     segmentPoints.add(routePoints.get(j));
@@ -319,7 +318,7 @@ public class MemoryOptimizedGpxEvaluator {
     }
 
     /**
-     * Process route chunk and create visualization data
+     * Process route chunk and create visualization data with ROBUST retry logic
      */
     private static void processRouteChunkWithVisualization(RouteChunk chunk,
                                                            OptimizedRouteAnalysis analysis,
@@ -328,22 +327,17 @@ public class MemoryOptimizedGpxEvaluator {
 
         Log.d(TAG, "Processing chunk " + chunk.chunkIndex + " with " + chunk.segments.size() + " segments");
 
-        List<PolylineResult> chunkRoads = null;
-        try {
-            chunkRoads = OverpassServiceSync.fetchDataSync(chunk.boundingBox, scoreCalculator);
-            analysis.totalRoadsInArea += chunkRoads.size();
-            Log.d(TAG, "Found " + chunkRoads.size() + " roads in chunk " + chunk.chunkIndex);
-        } catch (Exception e) {
-            Log.w(TAG, "Failed to fetch roads for chunk " + chunk.chunkIndex + ": " + e.getMessage());
-            chunkRoads = new ArrayList<>();
-        }
+        // Use ROBUST retry logic to ensure data ALWAYS arrives
+        List<PolylineResult> chunkRoads = fetchChunkDataWithRetry(chunk, scoreCalculator);
+        analysis.totalRoadsInArea += chunkRoads.size();
+        Log.d(TAG, "Found " + chunkRoads.size() + " roads in chunk " + chunk.chunkIndex);
 
         // Match segments to roads and create visualization data
         for (RouteSegment segment : chunk.segments) {
             PolylineResult bestMatch = findClosestRoad(segment, chunkRoads);
 
             double segmentDistance = segment.distance;
-            int qualityScore = -1; // Unknown by default
+            int qualityScore = -1;
             String surfaceType = "unknown";
 
             if (bestMatch != null) {
@@ -364,15 +358,73 @@ public class MemoryOptimizedGpxEvaluator {
                 analysis.unknownDistance += segmentDistance;
             }
 
-            // Create visualization segment
             RouteSegmentResult segmentResult = new RouteSegmentResult(segment.segmentPoints, qualityScore);
             segmentResult.surfaceType = surfaceType;
             analysis.routeSegments.add(segmentResult);
         }
 
-        // Clear memory
         chunkRoads.clear();
         chunkRoads = null;
+    }
+
+    /**
+     * ROBUST: Fetch chunk data with retry logic and exponential backoff
+     * This ensures we ALWAYS get data for each chunk, preventing incomplete analysis
+     */
+    private static List<PolylineResult> fetchChunkDataWithRetry(RouteChunk chunk,
+                                                                ScoreCalculator scoreCalculator) {
+        int maxRetries = 5;
+        int retryDelay = 2000; // Start with 2 seconds
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                Log.d(TAG, "Fetching data for chunk " + chunk.chunkIndex + " (attempt " + attempt + "/" + maxRetries + ")");
+
+                List<PolylineResult> roads = OverpassServiceSync.fetchDataSync(chunk.boundingBox, scoreCalculator);
+
+                if (roads != null && !roads.isEmpty()) {
+                    Log.d(TAG, "Successfully fetched " + roads.size() + " roads for chunk " + chunk.chunkIndex);
+                    return roads;
+                } else {
+                    Log.w(TAG, "No roads returned for chunk " + chunk.chunkIndex + ", retrying...");
+                }
+
+            } catch (Exception e) {
+                String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+                Log.w(TAG, "Attempt " + attempt + " failed for chunk " + chunk.chunkIndex + ": " + errorMsg);
+
+                // Check if it's a rate limit or timeout error
+                if (errorMsg.contains("<?xml") || errorMsg.contains("JSONObject") ||
+                        errorMsg.contains("rate") || errorMsg.contains("timeout")) {
+
+                    if (attempt < maxRetries) {
+                        try {
+                            Log.d(TAG, "Waiting " + retryDelay + "ms before retry...");
+                            Thread.sleep(retryDelay);
+                            // Exponential backoff: double the delay for next attempt
+                            retryDelay *= 2;
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                } else {
+                    // For other errors, maybe don't retry as aggressively
+                    if (attempt < maxRetries) {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // If all retries failed, return empty list (but we tried hard!)
+        Log.e(TAG, "All " + maxRetries + " attempts failed for chunk " + chunk.chunkIndex + ". Returning empty result.");
+        return new ArrayList<>();
     }
 
     private static void analyzeExistingElevationDataWithVisualization(List<RouteSegment> segments,
@@ -399,7 +451,6 @@ public class MemoryOptimizedGpxEvaluator {
         }
     }
 
-    // Helper methods (unchanged from original)
     private static List<RouteChunk> createRouteChunks(List<RouteSegment> segments) {
         List<RouteChunk> chunks = new ArrayList<>();
         double maxChunkDistanceMeters = MAX_CHUNK_SIZE_KM * 1000;

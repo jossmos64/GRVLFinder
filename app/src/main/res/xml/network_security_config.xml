@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">strava.com</domain>
+        <domain includeSubdomains="true">connect.garmin.com</domain>
+        <domain includeSubdomains="true">ridewithgps.com</domain>
+        <domain includeSubdomains="true">komoot.com</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

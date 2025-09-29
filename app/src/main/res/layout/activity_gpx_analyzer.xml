@@ -17,18 +17,19 @@
 
         <Button
             android:id="@+id/backButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:text="←"
-            android:textSize="18sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:backgroundTint="#d0b58a"
-            android:textColor="@color/white" />
+            android:text="←"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="GPX Route Analyzer"
+            android:textColor="#475e41"
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -52,9 +53,10 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Select GPX File"
+            android:text="Select GPX Source"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="#475e41"
             android:layout_marginBottom="10dp" />
 
         <Button
@@ -64,6 +66,16 @@
             android:text="📁 Choose GPX File"
             android:backgroundTint="#d0b58a"
             android:textColor="@color/white"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/stravaButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose from Strava"
+            android:backgroundTint="#FC4C02"
+            android:textColor="@color/white"
+            android:gravity="center"
             android:layout_marginBottom="10dp" />
 
         <TextView
@@ -93,6 +105,7 @@
             android:text="Analysis Type"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="#475e41"
             android:layout_marginBottom="10dp" />
 
         <Spinner
@@ -137,6 +150,7 @@
             android:layout_height="wrap_content"
             android:max="100"
             android:layout_marginBottom="10dp"
+            android:progressTint="#475e41"
             android:visibility="gone" />
 
         <TextView
@@ -145,6 +159,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textSize="14sp"
+            android:textColor="#475e41"
             android:visibility="gone" />
     </LinearLayout>
 
@@ -168,7 +183,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="• Import GPX files from your device or share them directly from Strava/Garmin\n• Choose your bike type for tailored analysis\n• Get detailed surface analysis, elevation data, and route suitability recommendations\n• View comprehensive breakdowns of gravel vs paved sections"
+            android:text="• Import GPX files from your device or share them directly from Strava/Garmin\n• Browse and analyze your Strava routes with direct integration\n• Choose your bike type for tailored analysis\n• Get detailed surface analysis, elevation data, and route suitability recommendations\n• View comprehensive breakdowns of gravel vs paved sections"
             android:textSize="13sp"
             android:lineSpacingExtra="4dp"
             android:lineSpacingMultiplier="1.2" />

@@ -74,6 +74,8 @@ public class MainActivity extends BaseMapActivity {
 
     }
 
+    // In MainActivity.java, update the bindUI() method to remove Strava button code:
+
     private void bindUI() {
         findButton = findViewById(R.id.findButton);
         exportButton = findViewById(R.id.exportButton);
@@ -82,7 +84,9 @@ public class MainActivity extends BaseMapActivity {
         drawExploreButton = findViewById(R.id.drawExploreButton);
         progressBar = findViewById(R.id.progressBar);
         bikeTypeButton = findViewById(R.id.bikeTypeButton);
-        gpxAnalyzerButton = findViewById(R.id.gpxAnalyzerButton); // New button
+        gpxAnalyzerButton = findViewById(R.id.gpxAnalyzerButton);
+
+        // REMOVED: Strava button initialization (now in GpxAnalyzerActivity)
 
         LinearLayout legendContainer = findViewById(R.id.legendContainer);
         if (legendContainer != null) {
@@ -94,8 +98,8 @@ public class MainActivity extends BaseMapActivity {
 
         View topButtons = findViewById(R.id.topButtonContainer);
         if (topButtons != null) {
-            topButtons.bringToFront();    // Z-orde verhogen
-            topButtons.invalidate();      // geforceerd hertekenen
+            topButtons.bringToFront();
+            topButtons.invalidate();
         }
 
         ToggleButton btnGreen = findViewById(R.id.btnGreen);
@@ -105,6 +109,7 @@ public class MainActivity extends BaseMapActivity {
         filterManager.setButtons(btnGreen, btnYellow, btnRed);
         filterManager.setFilterCallback(() -> updateMapFilter());
     }
+
 
     private void setupEventHandlers() {
         findButton.setOnClickListener(v -> handleFindGravel());
@@ -458,5 +463,4 @@ public class MainActivity extends BaseMapActivity {
         lastResultsCache = null;
         lastQueryTimeMs = 0;
     }
-
 }

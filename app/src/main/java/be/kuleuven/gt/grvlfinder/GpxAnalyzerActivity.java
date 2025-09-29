@@ -48,8 +48,58 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         setupEventHandlers();
         setupBikeTypeSpinner();
 
-        // Handle incoming share Intent or file opening
-        handleIncomingIntent(getIntent());
+        // Check if this is from Strava integration
+        if (getIntent().getBooleanExtra("from_strava", false)) {
+            handleStravaRoute();
+        } else {
+            // Handle incoming share Intent or file opening
+            handleIncomingIntent(getIntent());
+        }
+    }
+
+    // Add this new method to handle Strava routes
+    private void handleStravaRoute() {
+        if (TemporaryDataHolder.getInstance().hasRoute()) {
+            loadedRoute = TemporaryDataHolder.getInstance().getRoute();
+            String routeName = TemporaryDataHolder.getInstance().getRouteName();
+
+            // Clear the temporary data
+            TemporaryDataHolder.getInstance().clear();
+
+            if (loadedRoute != null && !loadedRoute.getPoints().isEmpty()) {
+                // Update UI with route info
+                updateFileInfoForStravaRoute(routeName, loadedRoute);
+                analyzeButton.setEnabled(true);
+
+                Toast.makeText(this, "Strava route loaded successfully", Toast.LENGTH_SHORT).show();
+
+                // Auto-start analysis after a short delay
+                fileInfoText.postDelayed(this::analyzeRoute, 1000);
+            } else {
+                Toast.makeText(this, "Failed to load Strava route", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(this, "No Strava route data available", Toast.LENGTH_LONG).show();
+            finish();
+        }
+    }
+
+    // Add this helper method
+    private void updateFileInfoForStravaRoute(String routeName, GpxParser.GpxRoute route) {
+        double distance = GpxParser.calculateRouteDistance(route.getPoints()) / 1000.0;
+        boolean hasElevation = GpxParser.hasElevationData(route.getPoints());
+
+        StringBuilder info = new StringBuilder();
+        info.append("Strava Route\n");
+        if (routeName != null && !routeName.trim().isEmpty()) {
+            info.append("Route: ").append(routeName).append("\n");
+        }
+        info.append(String.format("Points: %d\n", route.getPoints().size()));
+        info.append(String.format("Distance: %.2f km\n", distance));
+        info.append("Elevation data: ").append(hasElevation ? "Available" : "Not available").append("\n");
+        info.append("Source: Strava");
+
+        fileInfoText.setText(info.toString());
     }
 
     @Override
@@ -58,6 +108,8 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         setIntent(intent);
         handleIncomingIntent(intent);
     }
+
+    // Add this to the initializeUI() method in GpxAnalyzerActivity.java
 
     private void initializeUI() {
         selectFileButton = findViewById(R.id.selectFileButton);
@@ -68,9 +120,24 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         progressText = findViewById(R.id.progressText);
         bikeTypeSpinner = findViewById(R.id.bikeTypeSpinner);
 
+        // Add Strava button initialization
+        Button stravaButton = findViewById(R.id.stravaButton);
+
         analyzeButton.setEnabled(false);
         progressBar.setVisibility(ProgressBar.GONE);
         progressText.setVisibility(TextView.GONE);
+
+        // Set up Strava button click listener
+        if (stravaButton != null) {
+            stravaButton.setOnClickListener(v -> openStravaIntegration());
+        }
+    }
+
+// Add this method to GpxAnalyzerActivity.java
+
+    private void openStravaIntegration() {
+        Intent intent = new Intent(this, StravaIntegrationActivity.class);
+        startActivity(intent);
     }
 
     private void setupEventHandlers() {
@@ -304,15 +371,102 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
                 (lowerUrl.startsWith("https://") && lowerUrl.contains("course")); // Generic course URLs
     }
 
+    // Replace the downloadGpxFromUrl method in GpxAnalyzerActivity.java
+
     private void downloadGpxFromUrl(String url) {
         // Show progress
         selectFileButton.setEnabled(false);
         analyzeButton.setEnabled(false);
         progressBar.setVisibility(ProgressBar.VISIBLE);
         progressText.setVisibility(TextView.VISIBLE);
-        progressText.setText("Downloading GPX from URL...");
+        progressText.setText("Analyzing URL...");
 
-        // Use AsyncTask or Thread for network operation
+        // Check URL type and handle accordingly
+        if (url.contains("connect.garmin.com")) {
+            handleGarminUrl(url);
+        } else if (url.contains("strava.com")) {
+            handleStravaUrl(url);
+        } else if (url.contains("ridewithgps.com")) {
+            handleRideWithGpsUrl(url);
+        } else {
+            // Try generic download
+            attemptDirectDownload(url);
+        }
+    }
+
+    private void handleGarminUrl(String url) {
+        progressText.setText("Garmin Connect link detected...");
+
+        // Most Garmin Connect routes require authentication
+        // Try a few public URL patterns, but mostly guide user to manual export
+        new Thread(() -> {
+            try {
+                // Try some public Garmin URL patterns
+                String[] possibleUrls = generateGarminPublicUrls(url);
+                boolean success = false;
+
+                for (String testUrl : possibleUrls) {
+                    if (tryDownloadGpx(testUrl)) {
+                        success = true;
+                        break;
+                    }
+                }
+
+                if (!success) {
+                    runOnUiThread(() -> {
+                        hideProgressUI();
+                        showGarminExportGuide(url);
+                    });
+                }
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    hideProgressUI();
+                    showGarminExportGuide(url);
+                });
+            }
+        }).start();
+    }
+
+    private void handleStravaUrl(String url) {
+        progressText.setText("Strava link detected...");
+
+        runOnUiThread(() -> {
+            hideProgressUI();
+
+            // Show dialog suggesting Strava integration
+            androidx.appcompat.app.AlertDialog.Builder builder =
+                    new androidx.appcompat.app.AlertDialog.Builder(this);
+
+            builder.setTitle("Strava Route Detected");
+            builder.setMessage("This appears to be a Strava route link.\n\n" +
+                    "For the best experience, use the Strava Integration feature " +
+                    "which allows you to browse and analyze your Strava routes directly.\n\n" +
+                    "Alternatively, you can manually export the GPX file from Strava.");
+
+            builder.setPositiveButton("Open Strava Integration", (dialog, which) -> {
+                Intent intent = new Intent(this, StravaIntegrationActivity.class);
+                startActivity(intent);
+            });
+
+            builder.setNeutralButton("Manual Export Guide", (dialog, which) -> {
+                showExportGuide("Strava");
+            });
+
+            builder.setNegativeButton("Try Direct Download", (dialog, which) -> {
+                attemptDirectDownload(url);
+            });
+
+            builder.show();
+        });
+    }
+
+    private void handleRideWithGpsUrl(String url) {
+        progressText.setText("Checking Ride with GPS...");
+        attemptDirectDownload(url);
+    }
+
+    private void attemptDirectDownload(String url) {
         new Thread(() -> {
             try {
                 String gpxData = downloadGpxData(url);
@@ -338,14 +492,13 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
                             updateFileInfo(url, loadedRoute);
                             analyzeButton.setEnabled(true);
 
-                            Toast.makeText(this, "GPX downloaded successfully - starting analysis...", Toast.LENGTH_SHORT).show();
-                            fileInfoText.postDelayed(this::analyzeRoute, 500);
+                            Toast.makeText(this, "GPX downloaded successfully!", Toast.LENGTH_SHORT).show();
+                            hideProgressUI();
 
                         } catch (Exception e) {
                             Log.e(TAG, "Error parsing downloaded GPX data", e);
                             Toast.makeText(this, "Error parsing downloaded GPX: " + e.getMessage(),
                                     Toast.LENGTH_LONG).show();
-                        } finally {
                             hideProgressUI();
                         }
                     });
@@ -364,6 +517,90 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    private boolean tryDownloadGpx(String url) {
+        try {
+            String gpxData = downloadGpxData(url);
+            if (gpxData != null && isValidGpxContent(gpxData)) {
+                runOnUiThread(() -> {
+                    try {
+                        java.io.ByteArrayInputStream inputStream =
+                                new java.io.ByteArrayInputStream(gpxData.getBytes("UTF-8"));
+                        loadedRoute = GpxParser.parseGpxFile(inputStream);
+                        inputStream.close();
+
+                        if (loadedRoute != null && !loadedRoute.getPoints().isEmpty()) {
+                            updateFileInfo(url, loadedRoute);
+                            analyzeButton.setEnabled(true);
+                            Toast.makeText(this, "GPX downloaded successfully!", Toast.LENGTH_SHORT).show();
+                            hideProgressUI();
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing downloaded GPX", e);
+                    }
+                });
+                return true;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to download from: " + url, e);
+        }
+        return false;
+    }
+
+    private String[] generateGarminPublicUrls(String originalUrl) {
+        java.util.List<String> urls = new java.util.ArrayList<>();
+
+        // Extract course ID from Garmin URL
+        String courseId = extractCourseId(originalUrl);
+        if (courseId != null) {
+            // Try public GPX URLs (these work for public courses only)
+            urls.add("https://connect.garmin.com/modern/proxy/course-service/course/" + courseId + "/gpx");
+            urls.add("https://connect.garmin.com/course/" + courseId + "/gpx");
+            urls.add("https://connect.garmin.com/modern/course/" + courseId + "/gpx");
+        }
+
+        // Add original URL as fallback
+        urls.add(originalUrl);
+
+        return urls.toArray(new String[0]);
+    }
+
+    private void showGarminExportGuide(String url) {
+        androidx.appcompat.app.AlertDialog.Builder builder =
+                new androidx.appcompat.app.AlertDialog.Builder(this);
+
+        builder.setTitle("Garmin Connect Export Required");
+        builder.setMessage("Most Garmin Connect routes require manual export.\n\n" +
+                "To export from Garmin Connect:\n\n" +
+                "Mobile App:\n" +
+                "• Open the course in Garmin Connect app\n" +
+                "• Tap the menu (⋯) or Share button\n" +
+                "• Look for 'Export' or 'Send to Device'\n" +
+                "• Select 'Export as GPX'\n" +
+                "• Share the GPX file with this app\n\n" +
+                "Website:\n" +
+                "• Visit connect.garmin.com on computer\n" +
+                "• Navigate to your course\n" +
+                "• Click the gear/settings icon\n" +
+                "• Select 'Export to GPX'\n" +
+                "• Download and share with this app");
+
+        builder.setPositiveButton("Open in Browser", (dialog, which) -> {
+            try {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(browserIntent);
+                Toast.makeText(this, "Export the GPX file and share it back to this app", Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Cannot open browser", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Select File Instead", (dialog, which) -> {
+            openFilePicker();
+        });
+
+        builder.show();
     }
 
     private String downloadGpxData(String url) throws Exception {

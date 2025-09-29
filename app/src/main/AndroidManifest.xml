@@ -124,5 +124,26 @@
 
         </activity>
 
+
+        <!-- Add this to your AndroidManifest.xml inside the application tag -->
+        <activity
+            android:name=".StravaIntegrationActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+
+            <!-- HTTP localhost callback -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="http"
+                    android:host="localhost"
+                    android:path="/exchange_token" />
+            </intent-filter>
+
+        </activity>
+
     </application>
 </manifest>

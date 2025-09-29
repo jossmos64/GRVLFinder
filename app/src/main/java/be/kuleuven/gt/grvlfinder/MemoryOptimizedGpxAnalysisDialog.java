@@ -77,8 +77,8 @@ public class MemoryOptimizedGpxAnalysisDialog {
                 Color.parseColor("#4CAF50"), "Perfect for " + analysis.analyzedForBikeType.getDisplayName());
         addQualityBar(container, "🟡 Decent Roads", analysis.yellowDistance, analysis.yellowPercentage,
                 Color.parseColor("#FF9800"), "Acceptable quality");
-        addQualityBar(container, "🔴 Poor Roads", analysis.redDistance, analysis.redPercentage,
-                Color.parseColor("#F44336"), "Challenging sections");
+        addQualityBar(container, "🔴 Not Suitable", analysis.redDistance, analysis.redPercentage,
+                Color.parseColor("#F44336"), "Asphalt or poor surface");
         addQualityBar(container, "⚪ No Road Match", analysis.unknownDistance, analysis.unknownPercentage,
                 Color.parseColor("#9E9E9E"), "No surface data available");
 
@@ -137,7 +137,7 @@ public class MemoryOptimizedGpxAnalysisDialog {
         routeMapView.setTileSource(TileSourceFactory.MAPNIK);
         routeMapView.setMultiTouchControls(true);
         routeMapView.setBuiltInZoomControls(true);
-        routeMapView.getController().setZoom(13.0);
+        routeMapView.getController().setZoom(16.0);
 
         // Add route segments with color coding - FIXED IMPLEMENTATION
         if (analysis.routeSegments != null && !analysis.routeSegments.isEmpty()) {

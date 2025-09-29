@@ -73,20 +73,14 @@
                 android:textColor="@color/white"/>
         </LinearLayout>
 
-        <!-- Third row: GPX Analyzer -->
-        <LinearLayout
+        <!-- Third row: GPX Analyzer only -->
+        <Button
+            android:id="@+id/gpxAnalyzerButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/gpxAnalyzerButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📊"
-                android:backgroundTint="#d0b58a"
-                android:textColor="@color/white"/>
-        </LinearLayout>
+            android:text="📊"
+            android:backgroundTint="#d0b58a"
+            android:textColor="@color/white"/>
     </LinearLayout>
 
 
