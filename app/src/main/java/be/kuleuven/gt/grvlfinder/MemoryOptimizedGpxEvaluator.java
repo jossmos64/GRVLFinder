@@ -89,7 +89,6 @@ public class MemoryOptimizedGpxEvaluator {
         public double dataCoveragePercentage;
         public int totalRoadsInArea;
 
-        // NEW: Route segments for map visualization
         public List<RouteSegmentResult> routeSegments;
 
         public OptimizedRouteAnalysis() {
@@ -200,19 +199,19 @@ public class MemoryOptimizedGpxEvaluator {
 
                 if (callback != null) postProgress(callback, 5, "Preparing route analysis...");
 
-                // Step 1: Create segments with point data for visualization
+                //Create segments with point data for visualization
                 List<RouteSegment> allSegments = createRouteSegmentsWithPoints(routePoints);
                 analysis.totalSegmentsAnalyzed = allSegments.size();
 
                 if (callback != null) postProgress(callback, 10, "Creating route chunks...");
 
-                // Step 2: Break route into manageable chunks
+                //Break route into manageable chunks
                 List<RouteChunk> chunks = createRouteChunks(allSegments);
                 Log.d(TAG, "Created " + chunks.size() + " chunks for analysis");
 
                 if (callback != null) postProgress(callback, 15, "Processing " + chunks.size() + " route chunks...");
 
-                // Step 3: Process each chunk with ROBUST retry logic
+                //Process each chunk with ROBUST retry logic
                 ScoreCalculator scoreCalculator = new ScoreCalculator(bikeTypeManager.getCurrentWeights());
                 scoreCalculator.setBikeTypeManager(bikeTypeManager);
 
@@ -250,14 +249,14 @@ public class MemoryOptimizedGpxEvaluator {
 
                 if (callback != null) postProgress(callback, 85, "Analyzing elevation data...");
 
-                // Step 4: Handle elevation
+                //Handle elevation
                 if (analysis.hasElevationData) {
                     analyzeExistingElevationDataWithVisualization(allSegments, analysis);
                 }
 
                 if (callback != null) postProgress(callback, 95, "Finalizing analysis...");
 
-                // Step 5: Calculate final metrics
+                //Calculate final metrics
                 calculateFinalMetrics(analysis);
 
                 Log.d(TAG, String.format("Analysis complete: %.1f%% green, %.1f%% yellow, %.1f%% red, %.1f%% unknown",
@@ -318,7 +317,7 @@ public class MemoryOptimizedGpxEvaluator {
     }
 
     /**
-     * Process route chunk and create visualization data with ROBUST retry logic
+     * Process route chunk and create visualization data with ROBUST RETRY logic
      */
     private static void processRouteChunkWithVisualization(RouteChunk chunk,
                                                            OptimizedRouteAnalysis analysis,
@@ -374,7 +373,7 @@ public class MemoryOptimizedGpxEvaluator {
     private static List<PolylineResult> fetchChunkDataWithRetry(RouteChunk chunk,
                                                                 ScoreCalculator scoreCalculator) {
         int maxRetries = 5;
-        int retryDelay = 2000; // Start with 2 seconds
+        int retryDelay = 2000; // Start with 2 seconds wait
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {

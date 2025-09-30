@@ -44,15 +44,12 @@ public class SmartRoutingService {
         void onError(String error);
     }
 
-    /**
-     * Calculate best route between two points based on bike type preferences
-     */
     public void calculateRoute(GeoPoint start, GeoPoint end, SmartRoutingCallback callback) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
 
         executor.execute(() -> {
             try {
-                // Step 1: Fetch road network in bounding box
+                //Fetch road network in bounding box
                 BoundingBox bbox = createExpandedBBox(start, end);
                 Log.d(TAG, "Fetching road network...");
 
@@ -65,10 +62,10 @@ public class SmartRoutingService {
 
                 Log.d(TAG, "Found " + roads.size() + " roads, building graph...");
 
-                // Step 2: Build road network graph
+                //Build road network graph
                 RoadGraph graph = buildRoadGraph(roads);
 
-                // Step 3: Find nearest nodes to start and end
+                //Find nearest nodes to start and end
                 RoadNode startNode = graph.findNearestNode(start);
                 RoadNode endNode = graph.findNearestNode(end);
 
@@ -79,7 +76,7 @@ public class SmartRoutingService {
 
                 Log.d(TAG, "Running A* pathfinding...");
 
-                // Step 4: Run A* pathfinding with score-based weights
+                //Run A* pathfinding with score-based weights
                 List<GeoPoint> route = findBestPath(graph, startNode, endNode, start, end);
 
                 if (route == null || route.isEmpty()) {
@@ -87,7 +84,7 @@ public class SmartRoutingService {
                     return;
                 }
 
-                // Step 5: Calculate route metrics
+                //Calculate route metrics
                 RouteMetrics metrics = calculateRouteMetrics(route, roads);
 
                 Log.d(TAG, "Route found: " + route.size() + " points, " +

@@ -29,7 +29,7 @@ public class BikeTypeSelectionDialog {
         int padding = dpToPx(context, 20);
         container.setPadding(padding, padding, padding, padding);
 
-        // Title
+        // Create Title
         TextView title = new TextView(context);
         title.setText("Select your bicycle type");
         title.setTextSize(18f);

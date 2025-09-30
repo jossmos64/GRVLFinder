@@ -10,9 +10,6 @@ public class LegendView {
         return LayoutInflater.from(context).inflate(R.layout.view_legend, null, false);
     }
 
-    /**
-     * Update legend title and labels based on bike type
-     */
     public static void updateForBikeType(View legendView, BikeType bikeType) {
         if (legendView == null) return;
 
@@ -29,15 +26,15 @@ public class LegendView {
             case RACE_ROAD:
                 legendTitle.setText("🚴‍♂️ Race Roads");
                 greenLabel.setText("  Excellent Roads");
-                yellowLabel.setText("  Good Roads");
+                yellowLabel.setText("  Acceptable Roads");
                 redLabel.setText("  Avoid");
                 break;
 
             case GRAVEL_BIKE:
                 legendTitle.setText("🚵‍♂️ Gravel Paths");
                 greenLabel.setText("  Prime Gravel");
-                yellowLabel.setText("  Good Gravel");
-                redLabel.setText("  Poor Surface");
+                yellowLabel.setText("  Unsure Gravel");
+                redLabel.setText("  wrong bike");
                 break;
 
             case RACE_BIKEPACKING:

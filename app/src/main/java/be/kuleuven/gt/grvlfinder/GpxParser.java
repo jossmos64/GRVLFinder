@@ -20,15 +20,28 @@ public class GpxParser {
         private String description;
 
         public GpxRoute() {
+
             this.points = new ArrayList<>();
         }
 
-        public List<GeoPoint> getPoints() { return points; }
-        public void setPoints(List<GeoPoint> points) { this.points = points; }
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
+        public List<GeoPoint> getPoints() {
+            return points;
+        }
+        public void setPoints(List<GeoPoint> points) {
+            this.points = points;
+        }
+        public String getName() {
+            return name;
+        }
+        public void setName(String name) {
+            this.name = name;
+        }
+        public String getDescription() {
+            return description;
+        }
+        public void setDescription(String description) {
+            this.description = description;
+        }
     }
 
     public static GpxRoute parseGpxFile(InputStream inputStream) throws Exception {
@@ -151,9 +164,6 @@ public class GpxParser {
         return route;
     }
 
-    /**
-     * Calculate total distance of route in meters
-     */
     public static double calculateRouteDistance(List<GeoPoint> points) {
         if (points == null || points.size() < 2) return 0.0;
 
@@ -164,9 +174,6 @@ public class GpxParser {
         return totalDistance;
     }
 
-    /**
-     * Check if route has elevation data
-     */
     public static boolean hasElevationData(List<GeoPoint> points) {
         if (points == null || points.isEmpty()) return false;
 

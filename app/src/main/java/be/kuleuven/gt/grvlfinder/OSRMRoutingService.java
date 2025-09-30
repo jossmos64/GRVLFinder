@@ -17,12 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OSRMRoutingService {
-    // Default - maar kan overschreven worden via SettingsActivity
     public static final String DEFAULT_OSRM_URL = "https://router.project-osrm.org/route/v1/bicycle/";
 
     private Context context;
 
     public OSRMRoutingService(Context context) {
+
         this.context = context.getApplicationContext();
     }
 
@@ -52,7 +52,7 @@ public class OSRMRoutingService {
                 String base = prefs.getString("routing_base_url", DEFAULT_OSRM_URL);
                 if (!base.endsWith("/")) base = base + "/";
                 // If user provided an API key param (optional)
-                String apiKeyParam = prefs.getString("routing_api_key_param", ""); // e.g. "&key=..."
+                String apiKeyParam = prefs.getString("routing_api_key_param", "");
                 String coords = start.getLongitude() + "," + start.getLatitude() + ";" +
                         end.getLongitude() + "," + end.getLatitude();
 

@@ -19,10 +19,10 @@ public class FilterManager {
     }
 
     public void setFilterCallback(FilterCallback callback) {
+
         this.callback = callback;
     }
 
-    // Koppel de ToggleButtons uit de legend
     public void setButtons(ToggleButton green, ToggleButton yellow, ToggleButton red) {
         this.btnGreen = green;
         this.btnYellow = yellow;
@@ -69,14 +69,25 @@ public class FilterManager {
     }
 
     // Getters
-    public boolean isShowGreen() { return showGreen; }
-    public boolean isShowYellow() { return showYellow; }
-    public boolean isShowRed() { return showRed; }
+    public boolean isShowGreen() {
+        return showGreen;
+    }
+    public boolean isShowYellow() {
+        return showYellow;
+    }
+    public boolean isShowRed() {
+        return showRed; }
 
     // Setters
-    public void setShowGreen(boolean show) { this.showGreen = show; if(btnGreen!=null) btnGreen.setChecked(show);}
-    public void setShowYellow(boolean show) { this.showYellow = show; if(btnYellow!=null) btnYellow.setChecked(show);}
-    public void setShowRed(boolean show) { this.showRed = show; if(btnRed!=null) btnRed.setChecked(show); }
+    public void setShowGreen(boolean show) {
+        this.showGreen = show; if(btnGreen!=null) btnGreen.setChecked(show);
+    }
+    public void setShowYellow(boolean show) {
+        this.showYellow = show; if(btnYellow!=null) btnYellow.setChecked(show);
+    }
+    public void setShowRed(boolean show) {
+        this.showRed = show; if(btnRed!=null) btnRed.setChecked(show);
+    }
 
     // Convenience methods
     public void setAllFilters(boolean green, boolean yellow, boolean red) {

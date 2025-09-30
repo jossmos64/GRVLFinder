@@ -5,9 +5,6 @@ import android.util.Log;
 import org.osmdroid.util.GeoPoint;
 import java.util.List;
 
-/**
- * Helper class to ensure GPX files from drawn routes have proper elevation data
- */
 public class GpxElevationHelper {
     private static final String TAG = "GpxElevationHelper";
 

@@ -48,7 +48,6 @@ public abstract class BaseMapActivity extends AppCompatActivity {
         map.getController().setZoom(5.0);
         map.getController().setCenter(europeCenter);
 
-        // MyLocation overlay inschakelen
         enableMyLocation();
 
         if (locationOverlay != null) {
@@ -58,7 +57,7 @@ public abstract class BaseMapActivity extends AppCompatActivity {
                     if (myLocation != null) {
                         map.getController().animateTo(myLocation); // centreer op locatie
 
-                        // Vloeiend inzoomen van huidig zoom 5 naar 16
+                        // Vloeiend inzoomen van huidig zoom 6 naar 16
                         new Thread(() -> {
                             for (int z = 6; z <= 16; z++) {
                                 int zoom = z;

@@ -33,5 +33,3 @@ public enum BikeType {
         return emoji + " " + displayName;
     }
 }
-
-// okey you have read all the files I suspect, I want a function that evaluates an gpx file that you have uploaded in the app. The evaluation says based on what ride mode is selected how many km of gravel roads or good asphalt roads is in your route, what your steepest slope is (also where this is)

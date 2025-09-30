@@ -20,12 +20,8 @@ import org.osmdroid.views.overlay.Marker;
 import java.util.Locale;
 import java.util.List;
 
-/**
- * Enhanced dialog for displaying Memory Optimized GPX analysis results with maps
- */
 public class MemoryOptimizedGpxAnalysisDialog {
 
-    // App theme colors from XML - updated to match your theme
     private static final int BACKGROUND_COLOR = Color.parseColor("#f2ead7");
     private static final int TEXT_COLOR = Color.parseColor("#475e41");
     private static final int ACCENT_COLOR = Color.parseColor("#d0b58a");
@@ -82,7 +78,6 @@ public class MemoryOptimizedGpxAnalysisDialog {
         addQualityBar(container, "⚪ No Road Match", analysis.unknownDistance, analysis.unknownPercentage,
                 Color.parseColor("#9E9E9E"), "No surface data available");
 
-        // Route quality visualization map - FIXED IMPLEMENTATION
         addRouteQualityMap(container, context, analysis);
 
         // Elevation analysis section
@@ -139,7 +134,7 @@ public class MemoryOptimizedGpxAnalysisDialog {
         routeMapView.setBuiltInZoomControls(true);
         routeMapView.getController().setZoom(16.0);
 
-        // Add route segments with color coding - FIXED IMPLEMENTATION
+        // Add route segments with color coding
         if (analysis.routeSegments != null && !analysis.routeSegments.isEmpty()) {
             double minLat = Double.MAX_VALUE, maxLat = Double.MIN_VALUE;
             double minLon = Double.MAX_VALUE, maxLon = Double.MIN_VALUE;
@@ -152,7 +147,7 @@ public class MemoryOptimizedGpxAnalysisDialog {
                 segmentLine.setPoints(segment.points);
                 segmentLine.setWidth(8.0f);
 
-                // Color based on quality score - SAME AS MAIN APP
+                // Color based on quality score
                 if (segment.qualityScore >= 20) {
                     segmentLine.setColor(Color.parseColor("#DD228B22")); // Green - excellent
                 } else if (segment.qualityScore >= 10) {
@@ -171,7 +166,7 @@ public class MemoryOptimizedGpxAnalysisDialog {
 
                 routeMapView.getOverlays().add(segmentLine);
 
-                // Calculate bounds - FIXED ALGORITHM
+                // Calculate bounds
                 for (GeoPoint point : segment.points) {
                     double lat = point.getLatitude();
                     double lon = point.getLongitude();
@@ -191,7 +186,7 @@ public class MemoryOptimizedGpxAnalysisDialog {
                 }
             }
 
-            // Set map bounds with padding - FIXED CALCULATION
+            // Set map bounds with padding
             if (boundsSet) {
                 double latSpan = maxLat - minLat;
                 double lonSpan = maxLon - minLon;
@@ -313,7 +308,7 @@ public class MemoryOptimizedGpxAnalysisDialog {
         slopeContainer.addView(slopeValue);
         container.addView(slopeContainer);
 
-        // Steepest Point Map - FIXED IMPLEMENTATION
+        // Steepest Point Map
         if (analysis.steepestPoint != null) {
             addSteepestPointMap(container, context, analysis);
         }
@@ -350,7 +345,7 @@ public class MemoryOptimizedGpxAnalysisDialog {
         mapTitle.setPadding(16, 12, 16, 8);
         container.addView(mapTitle);
 
-        // Create MapView for steepest point - FIXED IMPLEMENTATION
+        // Create MapView for steepest point
         MapView elevationMapView = new MapView(context);
         LinearLayout.LayoutParams mapParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 400);
@@ -367,7 +362,7 @@ public class MemoryOptimizedGpxAnalysisDialog {
         // Center on steepest point
         elevationMapView.getController().setCenter(analysis.steepestPoint);
 
-        // Add marker for steepest point - FIXED MARKER IMPLEMENTATION
+        // Add marker for steepest point
         Marker steepestMarker = new Marker(elevationMapView);
         steepestMarker.setPosition(analysis.steepestPoint);
         steepestMarker.setTitle(String.format(Locale.US, "Steepest Climb: %.1f%%", analysis.maxSlope));

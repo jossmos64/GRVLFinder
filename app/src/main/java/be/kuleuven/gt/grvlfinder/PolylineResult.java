@@ -31,11 +31,8 @@ public class PolylineResult {
     public void setTags(Map<String, String> tags) { this.tags = tags; }
     public double getMaxSlopePercent() { return maxSlopePercent; }
 
-    /**
-     * Force recalculation of max slope (useful after elevation data is updated)
-     */
-
     public void setMaxSlope(double maxSlope) {
+
         this.maxSlopePercent = maxSlope;
     }
 }

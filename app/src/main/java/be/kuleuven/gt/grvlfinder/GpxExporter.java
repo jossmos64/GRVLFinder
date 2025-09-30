@@ -29,9 +29,6 @@ public class GpxExporter {
         void onError(String error);
     }
 
-    /**
-     * Export route with elevation data (simplified - assumes elevation is already added)
-     */
     public static void exportRouteWithElevation(Context context, List<GeoPoint> route,
                                                 String filename, ExportCallback callback) {
         if (route == null || route.isEmpty()) {
@@ -53,9 +50,6 @@ public class GpxExporter {
         }
     }
 
-    /**
-     * Legacy method - kept for compatibility but routes to new method
-     */
     @Deprecated
     public static void exportRoute(Context context, List<GeoPoint> route, String filename, ExportCallback callback) {
         exportRouteWithElevation(context, route, filename, callback);

@@ -24,10 +24,6 @@ public class ElevationService {
         void onError(String error);
     }
 
-    /**
-     * Add slope data to roads using strategic elevation sampling
-     * UPDATED: Now also sets altitude on GeoPoints for GPX export
-     */
     public static void addSlopeDataToRoads(List<PolylineResult> roads, RoadElevationCallback callback) {
         if (roads == null || roads.isEmpty()) {
             if (callback != null) {
@@ -96,9 +92,6 @@ public class ElevationService {
         });
     }
 
-    /**
-     * NEW: Set altitude values on all road points by interpolating from sampled elevations
-     */
     private static void setAltitudesOnRoad(List<GeoPoint> roadPoints,
                                            List<GeoPoint> sampledPoints,
                                            List<Double> sampledElevations) {
@@ -128,7 +121,7 @@ public class ElevationService {
     }
 
     /**
-     * Create an elevation request for a single road
+     * Create an elevation request for a single road, needed for specific route analysis
      */
     private static RoadElevationRequest createElevationRequest(PolylineResult road, int roadIndex) {
         List<GeoPoint> roadPoints = road.getPoints();
@@ -199,7 +192,7 @@ public class ElevationService {
     }
 
     /**
-     * Calculate maximum slope for a road using elevation data
+     * Calculate maximum slope for a road using elevation data, needed for specific route analysis
      */
     private static double calculateRoadMaxSlope(RoadElevationRequest request, List<Double> elevations) {
         if (elevations.size() < 2) {
@@ -257,9 +250,6 @@ public class ElevationService {
         return Math.min(35.0, maxSlope);
     }
 
-    /**
-     * Fetch elevations in batches with rate limiting
-     */
     private static List<Double> fetchElevationsInBatches(List<GeoPoint> points) throws Exception {
         List<Double> allElevations = new ArrayList<>();
         int batchSize = 10;
@@ -291,9 +281,6 @@ public class ElevationService {
         return allElevations;
     }
 
-    /**
-     * Fetch elevations for a single batch
-     */
     private static List<Double> fetchBatchElevations(List<GeoPoint> batch) throws Exception {
         StringBuilder locations = new StringBuilder();
         for (int i = 0; i < batch.size(); i++) {
@@ -335,9 +322,6 @@ public class ElevationService {
         }
     }
 
-    /**
-     * Parse elevation API response
-     */
     private static List<Double> parseElevationResponse(String responseText, int expectedCount) throws Exception {
         JSONObject responseJson = new JSONObject(responseText);
         String status = responseJson.getString("status");
@@ -366,9 +350,6 @@ public class ElevationService {
         return elevations;
     }
 
-    /**
-     * Calculate total distance of a road
-     */
     private static double calculateTotalDistance(List<GeoPoint> points) {
         double total = 0.0;
         for (int i = 1; i < points.size(); i++) {
@@ -377,9 +358,6 @@ public class ElevationService {
         return total;
     }
 
-    /**
-     * Calculate distance between two points
-     */
     private static double calculateDistance(GeoPoint p1, GeoPoint p2) {
         double lat1Rad = Math.toRadians(p1.getLatitude());
         double lat2Rad = Math.toRadians(p2.getLatitude());
@@ -394,9 +372,6 @@ public class ElevationService {
         return 6371000 * c;
     }
 
-    /**
-     * Helper class for elevation requests
-     */
     private static class RoadElevationRequest {
         int roadIndex;
         double totalDistance;

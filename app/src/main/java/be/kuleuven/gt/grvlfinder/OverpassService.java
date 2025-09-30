@@ -45,7 +45,7 @@ public class OverpassService {
 
         executor.execute(() -> {
             try {
-                // Step 1: Fetch OSM road data (no elevations yet)
+                //Fetch OSM road data (no elevations yet)
                 Log.d(TAG, "Fetching OSM road data...");
                 List<PolylineResult> results = fetchDataSync(bbox, scoreCalculator);
 
@@ -58,7 +58,7 @@ public class OverpassService {
 
                 Log.d(TAG, "Found " + results.size() + " roads");
 
-                // Step 2: Decide whether to fetch elevation data based on bike type
+                //Decide whether to fetch elevation data based on bike type
                 boolean shouldFetchElevation = bikeTypeManager != null &&
                         bikeTypeManager.shouldFetchElevationData();
 
@@ -71,7 +71,7 @@ public class OverpassService {
                         public void onSuccess(List<PolylineResult> updatedResults) {
                             Log.d(TAG, "Recalculating scores with accurate slope data...");
 
-                            // CRITICAL: Recalculate scores using the new slope data
+                            //Recalculate scores using the new slope data
                             for (PolylineResult road : updatedResults) {
                                 double maxSlope = road.getMaxSlopePercent();
 

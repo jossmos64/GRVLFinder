@@ -51,22 +51,17 @@ public class ScoreCalculator {
         score += calculateBicycleScore(tags.get("bicycle"), w_bicycle);
         score += calculateWidthScore(tags.get("width"), w_width);
         score += calculateLengthScore(points, w_length);
-        score += calculateSlopeScore(tags, w_slope); // Use tags for incline data
+        score += calculateSlopeScore(tags, w_slope);
 
         return Math.max(0, score);
     }
 
-    /**
-     * Calculate score including slope data from PolylineResult
-     * This is the new method that should be used when slope data is available
-     */
     public int calculateScoreWithSlope(Map<String, String> tags, List<GeoPoint> points, double maxSlopePercent) {
         // Use bike type manager weights if available
         Map<String, Integer> currentWeights = (bikeTypeManager != null) ?
                 bikeTypeManager.getCurrentWeights() : weights;
 
         int baseScore = calculateScoreWithWeights(tags, points, currentWeights);
-
         // Remove the slope score from tags (which might be inaccurate)
         int w_slope = currentWeights.getOrDefault("slope", 5);
         baseScore -= calculateSlopeScore(tags, w_slope);
@@ -79,9 +74,6 @@ public class ScoreCalculator {
         return Math.max(0, baseScore);
     }
 
-    /**
-     * Road-focused surface scoring (for race bikes on roads)
-     */
     private int calculateRoadSurfaceScore(String surface, int weight) {
         if (surface == null) return 0;
         switch (surface.toLowerCase()) {
@@ -165,9 +157,6 @@ public class ScoreCalculator {
         return 0;
     }
 
-    /**
-     * OLD slope scoring using OSM incline tags - kept for fallback
-     */
     private int calculateSlopeScore(Map<String, String> tags, int weight) {
         if (weight == 0) return 0;
 
@@ -196,7 +185,7 @@ public class ScoreCalculator {
     }
 
     /**
-     * NEW accurate slope scoring using calculated slope data
+     * Accurate slope scoring using calculated slope data
      */
     private int calculateAccurateSlopeScore(double maxSlopePercent, int weight) {
         if (maxSlopePercent < 0) {
@@ -206,9 +195,6 @@ public class ScoreCalculator {
         return calculateSlopeScoreFromPercent(maxSlopePercent, weight);
     }
 
-    /**
-     * Convert slope percentage to score - UPDATED with much harsher penalties for 12%+ slopes
-     */
     private int calculateSlopeScoreFromPercent(double slopePercent, int weight) {
         // Use absolute value for consistent scoring
         double absSlope = Math.abs(slopePercent);
@@ -225,10 +211,6 @@ public class ScoreCalculator {
         }
     }
 
-    /**
-     * DEPRECATED: This method is no longer used with the new slope system
-     * Kept for compatibility but always returns -1
-     */
     @Deprecated
     public static double calculateMaxSlopePercent(List<GeoPoint> points) {
         Log.d(TAG, "calculateMaxSlopePercent is deprecated - slope is now calculated by ElevationService");

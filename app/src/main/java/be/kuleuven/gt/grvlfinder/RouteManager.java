@@ -44,7 +44,6 @@ public class RouteManager {
 
     public void addPointToRoute(GeoPoint tappedPoint) {
         GeoPoint snappedPoint = snapToNearestRoad(tappedPoint);
-
         // Add visual feedback marker at snap location
         showSnapMarker(snappedPoint);
 
@@ -55,7 +54,6 @@ public class RouteManager {
         }
 
         GeoPoint lastPoint = drawnRoute.get(drawnRoute.size() - 1);
-
         // Use A* pathfinding through road network
         List<GeoPoint> path = findPathAStar(lastPoint, snappedPoint);
 
@@ -71,9 +69,6 @@ public class RouteManager {
         updateRouteDisplay();
     }
 
-    /**
-     * Show temporary marker where snap happened (visual feedback)
-     */
     private void showSnapMarker(GeoPoint point) {
         Marker snapMarker = new Marker(mapView);
         snapMarker.setPosition(point);
@@ -89,9 +84,6 @@ public class RouteManager {
         }, 1000);
     }
 
-    /**
-     * A* pathfinding through the road network
-     */
     private List<GeoPoint> findPathAStar(GeoPoint start, GeoPoint end) {
         if (roadNetwork == null || roadNetwork.nodes.isEmpty()) {
             return null;
@@ -162,9 +154,6 @@ public class RouteManager {
         return null;
     }
 
-    /**
-     * Reconstruct the full path from A* result
-     */
     private List<GeoPoint> reconstructPath(PathNode endPath, GeoPoint actualStart, GeoPoint actualEnd) {
         List<RoadNode> nodePath = new ArrayList<>();
         PathNode current = endPath;
@@ -268,8 +257,6 @@ public class RouteManager {
             }
         }
 
-        // Much more forgiving snap distance - 300m
-        // This makes tapping roads MUCH easier
         if (minDist <= 500.0 && bestPoint != null) {
             Log.d(TAG, "Snapped to road " + minDist + "m away");
             return bestPoint;
@@ -375,6 +362,7 @@ public class RouteManager {
         Map<String, RoadNode> nodes = new HashMap<>();
 
         RoadNetwork(List<PolylineResult> roads) {
+
             buildNetwork(roads);
         }
 

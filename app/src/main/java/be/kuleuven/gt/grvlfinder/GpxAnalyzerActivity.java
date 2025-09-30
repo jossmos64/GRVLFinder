@@ -57,7 +57,6 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         }
     }
 
-    // Add this new method to handle Strava routes
     private void handleStravaRoute() {
         if (TemporaryDataHolder.getInstance().hasRoute()) {
             loadedRoute = TemporaryDataHolder.getInstance().getRoute();
@@ -84,7 +83,6 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         }
     }
 
-    // Add this helper method
     private void updateFileInfoForStravaRoute(String routeName, GpxParser.GpxRoute route) {
         double distance = GpxParser.calculateRouteDistance(route.getPoints()) / 1000.0;
         boolean hasElevation = GpxParser.hasElevationData(route.getPoints());
@@ -109,8 +107,6 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         handleIncomingIntent(intent);
     }
 
-    // Add this to the initializeUI() method in GpxAnalyzerActivity.java
-
     private void initializeUI() {
         selectFileButton = findViewById(R.id.selectFileButton);
         analyzeButton = findViewById(R.id.analyzeButton);
@@ -132,8 +128,6 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
             stravaButton.setOnClickListener(v -> openStravaIntegration());
         }
     }
-
-// Add this method to GpxAnalyzerActivity.java
 
     private void openStravaIntegration() {
         Intent intent = new Intent(this, StravaIntegrationActivity.class);
@@ -170,8 +164,6 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
             @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
     }
-
-    // Add these methods to your GpxAnalyzerActivity class
 
     private void showExportGuide(String serviceName) {
         StringBuilder guide = new StringBuilder();
@@ -239,7 +231,7 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
             textView.setMovementMethod(android.text.method.ScrollingMovementMethod.getInstance());
             textView.setMaxLines(20);
         }
-    }// Add these methods to your GpxAnalyzerActivity class
+    }
 
     private void handleIncomingIntent(Intent intent) {
         if (intent == null) {
@@ -355,7 +347,7 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         // Convert to lowercase for case-insensitive matching
         String lowerUrl = url.toLowerCase();
 
-        // Check for known fitness app URLs that might contain GPX data
+        // Check for known fitness app URLs that might contain GPX data, for future expansion
         return lowerUrl.contains("connect.garmin.com") ||
                 lowerUrl.contains("strava.com") ||
                 lowerUrl.contains("strava.app.link") || // Handle Strava app links
@@ -370,8 +362,6 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
                 (lowerUrl.startsWith("https://") && lowerUrl.contains("route")) || // Generic route URLs
                 (lowerUrl.startsWith("https://") && lowerUrl.contains("course")); // Generic course URLs
     }
-
-    // Replace the downloadGpxFromUrl method in GpxAnalyzerActivity.java
 
     private void downloadGpxFromUrl(String url) {
         // Show progress
@@ -397,8 +387,6 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
     private void handleGarminUrl(String url) {
         progressText.setText("Garmin Connect link detected...");
 
-        // Most Garmin Connect routes require authentication
-        // Try a few public URL patterns, but mostly guide user to manual export
         new Thread(() -> {
             try {
                 // Try some public Garmin URL patterns
@@ -547,7 +535,7 @@ public class GpxAnalyzerActivity extends AppCompatActivity {
         }
         return false;
     }
-
+    //doesn't work for now
     private String[] generateGarminPublicUrls(String originalUrl) {
         java.util.List<String> urls = new java.util.ArrayList<>();
 

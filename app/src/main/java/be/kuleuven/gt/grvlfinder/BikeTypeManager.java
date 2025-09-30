@@ -9,7 +9,7 @@ public class BikeTypeManager {
     private BikeType currentBikeType = BikeType.GRAVEL_BIKE; // Default
     private SharedPreferences prefs;
     private Map<String, Integer> customWeights = new HashMap<>();
-    private boolean elevationDataEnabled = true; // Default enabled
+    private boolean elevationDataEnabled = false; // Default disabled otherwise its slow by default
 
     public BikeTypeManager(SharedPreferences prefs) {
         this.prefs = prefs;
@@ -46,11 +46,11 @@ public class BikeTypeManager {
         try {
             currentBikeType = BikeType.valueOf(savedType);
         } catch (IllegalArgumentException e) {
-            currentBikeType = BikeType.GRAVEL_BIKE; // Fallback
+            currentBikeType = BikeType.GRAVEL_BIKE; // Fallback because this is the main point of the app
         }
 
         // Load elevation data preference
-        elevationDataEnabled = prefs.getBoolean("elevation_data_enabled", true);
+        elevationDataEnabled = prefs.getBoolean("elevation_data_enabled", false);
     }
 
     public void setBikeType(BikeType bikeType) {
@@ -59,21 +59,22 @@ public class BikeTypeManager {
     }
 
     public BikeType getCurrentBikeType() {
+
         return currentBikeType;
     }
 
     public Map<String, Integer> getCustomWeights() {
+
         return new HashMap<>(customWeights);
     }
 
     public void updateCustomWeight(String key, int value) {
+
         customWeights.put(key, value);
     }
 
-    /**
-     * Get/Set elevation data preference
-     */
     public boolean isElevationDataEnabled() {
+
         return elevationDataEnabled;
     }
 
@@ -82,9 +83,6 @@ public class BikeTypeManager {
         prefs.edit().putBoolean("elevation_data_enabled", enabled).apply();
     }
 
-    /**
-     * Get scoring weights based on current bike type
-     */
     public Map<String, Integer> getCurrentWeights() {
         switch (currentBikeType) {
             case RACE_ROAD:
@@ -102,24 +100,18 @@ public class BikeTypeManager {
         }
     }
 
-    /**
-     * Race bike on roads - prefers asphalt, no slope penalty
-     */
     private Map<String, Integer> getRaceRoadWeights() {
         Map<String, Integer> weights = new HashMap<>();
-        weights.put("surface", 15);    // High preference for good surfaces
-        weights.put("smoothness", 8);  // Smoothness matters for racing
-        weights.put("tracktype", -5);  // Avoid tracks
-        weights.put("bicycle", 3);     // Bike access important
+        weights.put("surface", 30);    // High preference for good surfaces
+        weights.put("smoothness", 10);  // Smoothness matters for racing
+        weights.put("tracktype", -50);  // Avoid tracks
+        weights.put("bicycle", 10);     // Bike access important
         weights.put("width", 5);       // Width somewhat important
         weights.put("length", 8);      // Longer segments preferred
         weights.put("slope", 0);       // No slope penalty for racing
         return weights;
     }
 
-    /**
-     * Gravel bike - current default behavior, no slope penalty
-     */
     private Map<String, Integer> getGravelBikeWeights() {
         Map<String, Integer> weights = new HashMap<>();
         weights.put("surface", 10);
@@ -132,24 +124,18 @@ public class BikeTypeManager {
         return weights;
     }
 
-    /**
-     * Race bikepacking - prefers roads but avoids very steep slopes
-     */
     private Map<String, Integer> getRaceBikepackingWeights() {
         Map<String, Integer> weights = new HashMap<>();
-        weights.put("surface", 12);    // Good surfaces important for loaded bike
-        weights.put("smoothness", 6);  // Smoothness matters with load
-        weights.put("tracktype", -3);  // Slight preference against tracks
-        weights.put("bicycle", 2);     // Bike access matters
+        weights.put("surface", 30);    // Good surfaces important for loaded bike
+        weights.put("smoothness", 12);  // Smoothness matters with load
+        weights.put("tracktype", -50);  // Slight preference against tracks
+        weights.put("bicycle", 10);     // Bike access matters
         weights.put("width", 6);       // Width important with panniers
         weights.put("length", 5);      // Length less important for touring
         weights.put("slope", 10);      // Avoid steep slopes with heavy load
         return weights;
     }
 
-    /**
-     * Gravel bikepacking - current behavior with slope penalties
-     */
     private Map<String, Integer> getGravelBikepackingWeights() {
         Map<String, Integer> weights = new HashMap<>();
         weights.put("surface", 10);
@@ -162,9 +148,6 @@ public class BikeTypeManager {
         return weights;
     }
 
-    /**
-     * Check if current mode should use slope penalties
-     */
     public boolean shouldPenalizeSlopes() {
         switch (currentBikeType) {
             case RACE_ROAD:
@@ -180,11 +163,8 @@ public class BikeTypeManager {
         }
     }
 
-    /**
-     * Check if current mode should fetch elevation data
-     */
     public boolean shouldFetchElevationData() {
-        // For bikepacking modes, always fetch elevation data (regardless of setting)
+        // For bikepacking modes, always fetch elevation data (regardless of setting), takes longer but is very important
         if (currentBikeType == BikeType.RACE_BIKEPACKING ||
                 currentBikeType == BikeType.GRAVEL_BIKEPACKING) {
             return true;
@@ -204,9 +184,6 @@ public class BikeTypeManager {
         return elevationDataEnabled; // Default
     }
 
-    /**
-     * Check if current mode prefers paved roads
-     */
     public boolean prefersPavedRoads() {
         switch (currentBikeType) {
             case RACE_ROAD:

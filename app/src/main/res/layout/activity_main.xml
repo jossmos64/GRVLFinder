@@ -28,21 +28,22 @@
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
-            <Button
-                android:id="@+id/bikeTypeButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🚵‍♂️"
-                android:textSize="10dp"
-                android:backgroundTint="#d0b58a"
-                android:textColor="@color/white"
-                android:layout_marginEnd="8dp"/>
 
             <Button
                 android:id="@+id/tutorialButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="❓"
+                android:backgroundTint="#d0b58a"
+                android:textColor="@color/white"
+                android:layout_marginEnd="8dp"/>
+
+
+            <Button
+                android:id="@+id/settingsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📖"
                 android:backgroundTint="#d0b58a"
                 android:textColor="@color/white"/>
 
@@ -56,13 +57,16 @@
             android:layout_marginBottom="8dp">
 
             <Button
-                android:id="@+id/drawExploreButton"
+                android:id="@+id/bikeTypeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✏️"
+                android:text="🚵‍♂️"
+                android:textSize="10dp"
                 android:backgroundTint="#d0b58a"
                 android:textColor="@color/white"
                 android:layout_marginEnd="8dp"/>
+
+
 
             <Button
                 android:id="@+id/criteriaButton"
@@ -73,11 +77,12 @@
                 android:textColor="@color/white"/>
         </LinearLayout>
 
-        <!-- Third row: GPX Analyzer & Settings -->
+        <!-- Third row: GPX Analyzer & Weather -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
 
             <Button
                 android:id="@+id/gpxAnalyzerButton"
@@ -88,13 +93,32 @@
                 android:textColor="@color/white"
                 android:layout_marginEnd="8dp"/>
 
+            <!-- NEW: Weather Button -->
             <Button
-                android:id="@+id/settingsButton"
+                android:id="@+id/weatherButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📖"
+                android:text="☁️"
+                android:backgroundTint="#d0b58a"
+                android:textColor="@color/white"
+                android:contentDescription="Weather information"/>
+        </LinearLayout>
+
+        <!-- Fourth row: Settings -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/drawExploreButton"
+                android:layout_width="184dp"
+                android:layout_height="wrap_content"
+                android:text="✏️"
                 android:backgroundTint="#d0b58a"
                 android:textColor="@color/white"/>
+
+
         </LinearLayout>
     </LinearLayout>
 
@@ -155,7 +179,7 @@
         android:layout_gravity="top|center_horizontal"
         android:layout_marginTop="150dp" />
 
-    <!-- Legend Container -->
+    <!-- Legend Container (Weather indicator will be added here programmatically) -->
     <LinearLayout
         android:id="@+id/legendContainer"
         android:orientation="vertical"
@@ -175,7 +199,7 @@
         android:layout_marginTop="290dp"
         android:layout_marginStart="20dp" />
 
-    <!-- OSM Attribution -->
+    <!-- OSM Attribution - Now Clickable -->
     <TextView
         android:id="@+id/osmAttribution"
         android:layout_width="wrap_content"
@@ -186,5 +210,7 @@
         android:layout_margin="8dp"
         android:layout_gravity="bottom|start"
         android:background="@drawable/bg_attribution"
-        android:textColor="#000000"/>
+        android:textColor="#0066CC"
+        android:clickable="true"
+        android:focusable="true"/>
 </FrameLayout>
