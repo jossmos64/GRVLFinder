@@ -27,12 +27,7 @@
         android:theme="@style/Theme.GrvlFinder"
         tools:targetApi="31">
 
-        <activity
-            android:name=".TutorialActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:screenOrientation="portrait"
-            android:exported="false" />
-
+        <!-- FLOW: 1. Splash Screen (First Entry Point) -->
         <activity
             android:name=".SplashActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
@@ -43,18 +38,42 @@
             </intent-filter>
         </activity>
 
+        <!-- FLOW: 2. Legal Acceptance (Required before app access) -->
+        <activity
+            android:name=".LegalAcceptanceActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:noHistory="false"/>
+
+        <!-- FLOW: 3. Tutorial (First-time users only) -->
+        <activity
+            android:name=".TutorialActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
+        <!-- FLOW: 4. Main Activity (After legal acceptance) -->
         <activity
             android:name=".MainActivity"
-            android:exported="true" />
+            android:exported="false" />
 
+        <!-- Settings -->
         <activity
             android:name=".SettingsActivity"
-            android:label="Instellingen"
+            android:label="Settings"
             android:parentActivityName=".MainActivity"
-            android:exported="true" />
+            android:exported="false" />
 
         <activity
-            android:name=".PrivacyPolicyActivity" />
+            android:name=".PrivacyPolicyActivity"
+            android:label="Privacy Policy"
+            android:exported="false"/>
+
+        <activity
+            android:name=".LicensesActivity"
+            android:label="Third-Party Licenses"
+            android:exported="false"/>
 
         <!-- GPX Analyzer Activity with intent filters for file sharing -->
         <activity
@@ -131,8 +150,7 @@
 
         </activity>
 
-
-        <!-- Add this to your AndroidManifest.xml inside the application tag -->
+        <!-- Strava Integration -->
         <activity
             android:name=".StravaIntegrationActivity"
             android:exported="true"

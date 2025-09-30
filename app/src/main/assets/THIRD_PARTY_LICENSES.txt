@@ -1,32 +1,191 @@
-Third-Party Licenses for GravelRide App
----------------------------------------
+THIRD-PARTY LICENSES AND ATTRIBUTIONS FOR GRVLFINDER
 
-1. osmdroid
+================================================================================
+OPEN SOURCE LIBRARIES
+================================================================================
+
+osmdroid
+--------
+License: Apache License 2.0
+Copyright: osmdroid contributors
+Source: https://github.com/osmdroid/osmdroid
+Usage: Map display and interaction
+
+Android Support Libraries
+--------------------------
+License: Apache License 2.0
+Copyright: The Android Open Source Project
+Usage: Core Android functionality
+
+
+================================================================================
+THIRD-PARTY SERVICES
+================================================================================
+
+OpenStreetMap
+-------------
+License: Open Database License (ODbL)
+Copyright: OpenStreetMap contributors
+Attribution: © OpenStreetMap contributors
+Website: https://www.openstreetmap.org/copyright
+Usage: Map data and road information
+
+Overpass API
 ------------
-License: Apache License, Version 2.0
-URL: https://github.com/osmdroid/osmdroid/blob/master/LICENSE.txt
+License: GNU Affero General Public License v3
+Copyright: Overpass API contributors
+Website: https://overpass-api.de/
+Usage: Querying OpenStreetMap data
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+Open-Meteo
+----------
+License: CC BY 4.0
+Attribution: Weather data by Open-Meteo.com
+Website: https://open-meteo.com/
+Usage: Weather forecasting data
 
-       http://www.apache.org/licenses/LICENSE-2.0
+OpenTopoData
+------------
+License: MIT License
+Data License: Various (SRTM data is public domain)
+Website: https://www.opentopodata.org/
+Usage: Elevation data retrieval
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+Strava API
+----------
+Terms: Strava API Agreement
+Copyright: Strava, Inc.
+Website: https://developers.strava.com/
+Usage: Optional route import functionality
+Brand Guidelines: https://developers.strava.com/guidelines/
 
-2. OpenStreetMap Contributors
------------------------------
-License: Open Database License (ODbL) v1.0
-URL: https://opendatacommons.org/licenses/odbl/
+STRAVA BRAND COMPLIANCE:
+- Strava and the Strava logo are registered trademarks of Strava, Inc.
+- This app uses Strava's API with proper OAuth authentication
+- Strava branding follows official guidelines
+- Users must authenticate directly with Strava
+- "Powered by Strava" attribution is displayed where required
 
-   This app uses map tiles and data from OpenStreetMap contributors.
-   ODbL allows you to share, modify, and use the database freely as long
-   as you attribute OpenStreetMap contributors and share derivative data
-   under the same license.
+
+================================================================================
+MAP TILE PROVIDERS
+================================================================================
+
+OpenStreetMap Tile Servers
+---------------------------
+Attribution: © OpenStreetMap contributors
+License: CC BY-SA 2.0
+Usage Policy: https://operations.osmfoundation.org/policies/tiles/
+
+
+================================================================================
+DATA SOURCES
+================================================================================
+
+SRTM Elevation Data
+-------------------
+Source: NASA Shuttle Radar Topography Mission
+License: Public Domain
+Usage: Elevation profiles and slope calculations
+
+
+================================================================================
+FULL LICENSE TEXTS
+================================================================================
+
+Apache License 2.0
+------------------
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+MIT License
+-----------
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+Open Database License (ODbL) Summary
+-------------------------------------
+
+You are free to copy, distribute, transmit and adapt the data, as long as you:
+- Attribute OpenStreetMap and its contributors
+- Share-Alike: If you alter or build upon the data, you may distribute the 
+  result only under the same license
+
+Full text: https://opendatacommons.org/licenses/odbl/1-0/
+
+
+CC BY-SA 2.0 Summary
+--------------------
+
+You are free to share and adapt the material, as long as you:
+- Give appropriate credit
+- Provide a link to the license
+- Share adaptations under the same license
+
+Full text: https://creativecommons.org/licenses/by-sa/2.0/
+
+
+CC BY 4.0 Summary
+-----------------
+
+You are free to share and adapt the material, as long as you:
+- Give appropriate credit
+- Provide a link to the license
+- Indicate if changes were made
+
+Full text: https://creativecommons.org/licenses/by/4.0/
+
+
+GNU Affero General Public License v3
+------------------------------------
+
+This is a copyleft license that requires anyone who distributes code or 
+provides a service using this software to make the source code available.
+
+Full text: https://www.gnu.org/licenses/agpl-3.0.en.html
+
+
+================================================================================
+ACKNOWLEDGMENTS
+================================================================================
+
+GRVLFinder is built on the foundation of these excellent open-source projects 
+and free data services. We are grateful to all contributors and maintainers.
+
+Special thanks to:
+- The OpenStreetMap community for providing comprehensive map data
+- Open-Meteo for free weather API access
+- OpenTopoData for elevation data services
+- The osmdroid team for their Android mapping library
+- All open-source contributors who make projects like this possible
 
 ---------------------------------------
-GravelRide App © 2025
+GRVLFinder App 2025

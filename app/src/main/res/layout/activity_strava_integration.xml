@@ -7,16 +7,18 @@
     android:background="#f2ead7">
 
     <!-- Header -->
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
         android:text="Strava Integration"
+        android:textColor="#475e41"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#475e41"
-        android:gravity="center"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="16dp" />
+        android:fontFamily="@font/baloo_bhaina"/>
 
     <ImageView
         android:layout_width="wrap_content"
