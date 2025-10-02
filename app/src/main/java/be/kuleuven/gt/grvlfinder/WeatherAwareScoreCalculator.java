@@ -33,7 +33,6 @@ public class WeatherAwareScoreCalculator extends ScoreCalculator {
      * Enable/disable weather-based scoring
      */
     public void setWeatherDataEnabled(boolean enabled) {
-
         this.weatherDataEnabled = enabled;
     }
 
@@ -127,7 +126,6 @@ public class WeatherAwareScoreCalculator extends ScoreCalculator {
      * Check if weather data is available and current
      */
     public boolean hasWeatherData() {
-
         return currentWeatherCondition != null;
     }
 

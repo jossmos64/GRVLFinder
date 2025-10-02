@@ -17,11 +17,15 @@ import java.util.List;
 
 public class StravaApiManager {
     private static final String TAG = "StravaApiManager";
+
+    // IMPORTANT: Move these to BuildConfig or secure storage in production
     private static final String CLIENT_ID = "178588";
+    private static final String CLIENT_SECRET = "b9632a4e26538c14c5985adf24edd9e3cd25d258";
     private static final String REDIRECT_URI = "http://localhost/exchange_token";
     private static final String BASE_URL = "https://www.strava.com/api/v3";
     private static final String AUTH_URL = "https://www.strava.com/oauth/authorize";
-    private static final String BACKEND_TOKEN_URL = "https://grvlfinderbackend.netlify.app/api/strava-token-exchange";
+    private static final String TOKEN_URL = "https://www.strava.com/oauth/token";
+
     private static final String PREFS_NAME = "strava_prefs";
     private static final String KEY_ACCESS_TOKEN = "access_token";
     private static final String KEY_REFRESH_TOKEN = "refresh_token";
@@ -47,7 +51,7 @@ public class StravaApiManager {
         public String updatedAt;
 
         public StravaRoute(JSONObject json) throws Exception {
-            this.id = String.valueOf(json.getLong("id"));
+            this.id = String.valueOf(json.getLong("id")); // Handle both string and number IDs
             this.name = json.optString("name", "Unnamed Route");
             this.description = json.optString("description", "");
             this.distance = json.optDouble("distance", 0);
@@ -113,16 +117,16 @@ public class StravaApiManager {
             return;
         }
 
-        Log.d(TAG, "Received authorization code, exchanging for token via backend");
+        Log.d(TAG, "Received authorization code, exchanging for token");
         exchangeCodeForToken(code, callback);
     }
 
     private void exchangeCodeForToken(String code, StravaCallback<Boolean> callback) {
         new Thread(() -> {
             try {
-                Log.d(TAG, "Exchanging code for token via backend");
+                Log.d(TAG, "Exchanging code for token");
 
-                URL url = new URL(BACKEND_TOKEN_URL);
+                URL url = new URL(TOKEN_URL);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
@@ -132,6 +136,8 @@ public class StravaApiManager {
                 conn.setReadTimeout(20000);
 
                 JSONObject requestBody = new JSONObject();
+                requestBody.put("client_id", CLIENT_ID);
+                requestBody.put("client_secret", CLIENT_SECRET);
                 requestBody.put("code", code);
                 requestBody.put("grant_type", "authorization_code");
 
@@ -140,7 +146,7 @@ public class StravaApiManager {
                 os.close();
 
                 int responseCode = conn.getResponseCode();
-                Log.d(TAG, "Backend token exchange response code: " + responseCode);
+                Log.d(TAG, "Token exchange response code: " + responseCode);
 
                 if (responseCode == 200) {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -151,7 +157,7 @@ public class StravaApiManager {
                     }
                     reader.close();
 
-                    Log.d(TAG, "Token response received from backend");
+                    Log.d(TAG, "Token response: " + response.toString());
 
                     JSONObject tokenResponse = new JSONObject(response.toString());
 
@@ -169,7 +175,7 @@ public class StravaApiManager {
                     callback.onSuccess(true);
                 } else {
                     String errorResponse = readErrorStream(conn);
-                    Log.e(TAG, "Backend token exchange failed: " + responseCode + " - " + errorResponse);
+                    Log.e(TAG, "Token exchange failed: " + responseCode + " - " + errorResponse);
                     callback.onError("Failed to exchange token: " + errorResponse);
                 }
 
@@ -188,11 +194,11 @@ public class StravaApiManager {
             return;
         }
 
-        Log.d(TAG, "Refreshing access token via backend");
+        Log.d(TAG, "Refreshing access token");
 
         new Thread(() -> {
             try {
-                URL url = new URL(BACKEND_TOKEN_URL);
+                URL url = new URL(TOKEN_URL);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
@@ -202,6 +208,8 @@ public class StravaApiManager {
                 conn.setReadTimeout(20000);
 
                 JSONObject requestBody = new JSONObject();
+                requestBody.put("client_id", CLIENT_ID);
+                requestBody.put("client_secret", CLIENT_SECRET);
                 requestBody.put("grant_type", "refresh_token");
                 requestBody.put("refresh_token", refreshToken);
 
@@ -210,7 +218,7 @@ public class StravaApiManager {
                 os.close();
 
                 int responseCode = conn.getResponseCode();
-                Log.d(TAG, "Backend token refresh response code: " + responseCode);
+                Log.d(TAG, "Token refresh response code: " + responseCode);
 
                 if (responseCode == 200) {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -237,8 +245,9 @@ public class StravaApiManager {
                     callback.onSuccess(true);
                 } else {
                     String errorResponse = readErrorStream(conn);
-                    Log.e(TAG, "Backend token refresh failed: " + responseCode + " - " + errorResponse);
+                    Log.e(TAG, "Token refresh failed: " + responseCode + " - " + errorResponse);
 
+                    // If refresh fails, clear tokens and require re-login
                     logout();
                     callback.onError("Session expired - please login again");
                 }
@@ -336,7 +345,7 @@ public class StravaApiManager {
                 conn.setRequestProperty("Authorization", "Bearer " + accessToken);
                 conn.setRequestProperty("Accept", "application/json, text/plain, */*");
                 conn.setConnectTimeout(15000);
-                conn.setReadTimeout(30000);
+                conn.setReadTimeout(30000); // Longer timeout for GPX downloads
 
                 int responseCode = conn.getResponseCode();
                 Log.d(TAG, "API response code: " + responseCode);
@@ -347,6 +356,7 @@ public class StravaApiManager {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         response.append(line);
+                        // For GPX files, preserve line breaks
                         if (endpoint.contains("export_gpx")) {
                             response.append("\n");
                         }
@@ -356,6 +366,7 @@ public class StravaApiManager {
                     String result = response.toString();
                     Log.d(TAG, "API call successful, response length: " + result.length());
 
+                    // Log first part of response for debugging (but not full GPX content)
                     if (result.length() > 200) {
                         Log.d(TAG, "Response preview: " + result.substring(0, 200) + "...");
                     } else {
