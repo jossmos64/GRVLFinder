@@ -22,7 +22,7 @@ public class EnhancedPolylineDetailsDialog {
 
         // Title
         TextView title = new TextView(context);
-        title.setText("Road Details / Wegdetails");
+        title.setText("Road Details");
         title.setTextSize(18f);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         container.addView(title);
@@ -67,7 +67,7 @@ public class EnhancedPolylineDetailsDialog {
         TextView slopeView = new TextView(context);
 
         if (maxSlope >= 0) {
-            slopeView.setText(String.format("Max. helling / slope: %.1f%%", maxSlope));
+            slopeView.setText(String.format("Max. slope: %.1f%%", maxSlope));
 
             // Color code based on slope severity
             if (maxSlope > 12.0) {
@@ -85,7 +85,7 @@ public class EnhancedPolylineDetailsDialog {
                 slopeView.setTextColor(Color.parseColor("#228B22")); // Green
             }
         } else {
-            slopeView.setText("Max. helling: onbekend (geen hoogte data)");
+            slopeView.setText("Max. slope: unknown (no elevation data)");
             slopeView.setTextColor(Color.GRAY);
         }
 
@@ -96,14 +96,14 @@ public class EnhancedPolylineDetailsDialog {
         // Add slope warnings
         if (maxSlope > 12.0) {
             TextView slopeWarning = new TextView(context);
-            slopeWarning.setText("⚠️ Zeer steile helling - mogelijk moeilijk berijdbaar");
+            slopeWarning.setText("⚠️ Very steep slope - may be difficult to drive on");
             slopeWarning.setTextColor(Color.RED);
             slopeWarning.setTextSize(12f);
             slopeWarning.setPadding(0, 0, 0, 15);
             container.addView(slopeWarning);
         } else if (maxSlope > 8.0) {
             TextView slopeWarning = new TextView(context);
-            slopeWarning.setText("⚠️ Steile helling - uitdagend");
+            slopeWarning.setText("⚠️ Steep slope - challenging");
             slopeWarning.setTextColor(Color.parseColor("#FF6600"));
             slopeWarning.setTextSize(12f);
             slopeWarning.setPadding(0, 0, 0, 15);
@@ -146,7 +146,7 @@ public class EnhancedPolylineDetailsDialog {
             }
         } else {
             TextView noTags = new TextView(context);
-            noTags.setText("Geen OSM tags beschikbaar");
+            noTags.setText("No OSM tags available");
             noTags.setTextSize(13f);
             noTags.setTextColor(Color.GRAY);
             noTags.setPadding(0, 10, 0, 0);

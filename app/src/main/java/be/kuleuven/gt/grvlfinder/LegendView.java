@@ -38,17 +38,17 @@ public class LegendView {
                 break;
 
             case RACE_BIKEPACKING:
-                legendTitle.setText("🎒🚴‍♂️ Touring Roads");
+                legendTitle.setText("🎒🚴‍♂️ Touring");
                 greenLabel.setText("  Easy Touring");
                 yellowLabel.setText("  Manageable");
                 redLabel.setText("  Too Steep/Rough");
                 break;
 
             case GRAVEL_BIKEPACKING:
-                legendTitle.setText("🎒🚵‍♂️ Adventure Routes");
+                legendTitle.setText("🎒🚵‍♂️ Adventure");
                 greenLabel.setText("  Great Adventure");
-                yellowLabel.setText("  Moderate Challenge");
-                redLabel.setText("  Extreme/Unrideable");
+                yellowLabel.setText("  Challenging");
+                redLabel.setText("  Extreme");
                 break;
 
             case CUSTOM:

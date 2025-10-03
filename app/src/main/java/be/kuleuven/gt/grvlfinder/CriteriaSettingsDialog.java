@@ -24,7 +24,7 @@ public class CriteriaSettingsDialog {
         container.setPadding(padding, padding, padding, padding);
 
         TextView title = new TextView(context);
-        title.setText("Criteria instellingen");
+        title.setText("Criteria settings");
         title.setTextSize(18f);
         title.setTypeface(Typeface.DEFAULT_BOLD);
 
@@ -37,13 +37,13 @@ public class CriteriaSettingsDialog {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        addSlider(container, "surface", "Oppervlak", weights, prefs);
-        addSlider(container, "smoothness", "Gladheid", weights, prefs);
-        addSlider(container, "tracktype", "Type spoor", weights, prefs);
-        addSlider(container, "bicycle", "Fiets toegang", weights, prefs);
-        addSlider(container, "width", "Breedte", weights, prefs);
-        addSlider(container, "length", "Lengte", weights, prefs);
-        addSlider(container, "slope", "Helling", weights, prefs);
+        addSlider(container, "surface", "surface", weights, prefs);
+        addSlider(container, "smoothness", "smoothness", weights, prefs);
+        addSlider(container, "tracktype", "tracktype", weights, prefs);
+        addSlider(container, "bicycle", "bicycle", weights, prefs);
+        addSlider(container, "width", "width", weights, prefs);
+        addSlider(container, "length", "length", weights, prefs);
+        addSlider(container, "slope", "slope", weights, prefs);
 
         scroll.addView(container);
         dialog.setContentView(scroll);
@@ -56,7 +56,7 @@ public class CriteriaSettingsDialog {
         int currentVal = weights.getOrDefault(key, 0);
 
         TextView label = new TextView(context);
-        label.setText(displayName + " gewicht (" + currentVal + ")");
+        label.setText(displayName + " score (" + currentVal + ")");
         label.setTextSize(14f);
 
         LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(
@@ -83,7 +83,7 @@ public class CriteriaSettingsDialog {
             public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
                 if (fromUser) {
                     weights.put(key, progress);
-                    label.setText(displayName + " gewicht (" + progress + ")");
+                    label.setText(displayName + " score (" + progress + ")");
                     prefs.edit().putInt("weight_" + key, progress).apply();
                 }
             }
